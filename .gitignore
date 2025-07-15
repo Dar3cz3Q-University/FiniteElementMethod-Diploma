@@ -420,3 +420,6 @@ FodyWeavers.xsd
 
 # Exclude Vendor binaries
 !Vendor/Bin/*
+
+# Installed packages
+vcpkg_installed/
