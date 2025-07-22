@@ -1,7 +1,7 @@
 project "App"
   kind "ConsoleApp"
   language "C++"
-  cppdialect "C++20"
+  cppdialect "C++23"
   staticruntime "off"
 
   targetdir (OutputDir .. "/%{prj.name}")
