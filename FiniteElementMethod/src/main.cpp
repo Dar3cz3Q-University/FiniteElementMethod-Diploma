@@ -1,9 +1,7 @@
+#include "core/Application.h"
+
 #include <iostream>
-#include "logger/Log.h"
 
 int main() {
-	std::cout << "Hello World!\n";
-
-	fem::logger::Log::Init();
-
+	fem::core::Application app;
 }

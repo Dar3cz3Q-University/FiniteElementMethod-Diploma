@@ -26,3 +26,6 @@ private:
 #define LOG_WARN(...)      fem::logger::Log::GetLogger()->log(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::warn, __VA_ARGS__)
 #define LOG_ERROR(...)     fem::logger::Log::GetLogger()->log(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::error, __VA_ARGS__)
 #define LOG_CRITICAL(...)  fem::logger::Log::GetLogger()->log(spdlog::source_loc{__FILE__, __LINE__, SPDLOG_FUNCTION}, spdlog::level::critical, __VA_ARGS__)
+
+
+// TODO: Disable logging in release build

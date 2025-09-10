@@ -10,6 +10,8 @@ void Log::Init() {
 	s_Logger = spdlog::stdout_color_mt("FEM");
 	s_Logger->set_level(spdlog::level::trace);
 
+	// TODO: Add logging to file
+
 	LOG_TRACE("Logger initialized");
 }
 
