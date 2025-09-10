@@ -1,7 +1,6 @@
 #pragma once
 
-namespace fem {
-namespace core {
+namespace fem::core {
 
 class Application
 {
@@ -14,9 +13,4 @@ private:
 	void Execute();
 };
 
-} // namespace fem
-} // namespace core
-
-
-
-
+}

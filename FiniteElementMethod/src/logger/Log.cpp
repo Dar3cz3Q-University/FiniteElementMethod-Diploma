@@ -1,7 +1,6 @@
 #include "Log.h"
 
-namespace fem {
-namespace logger {
+namespace fem::logger {
 
 std::shared_ptr<spdlog::logger> Log::s_Logger;
 
@@ -15,5 +14,4 @@ void Log::Init() {
 	LOG_TRACE("Logger initialized");
 }
 
-} // namespace log
-} // namespace fem
+}

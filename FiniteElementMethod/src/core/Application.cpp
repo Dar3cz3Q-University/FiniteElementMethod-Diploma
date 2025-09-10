@@ -2,8 +2,7 @@
 
 #include "logger/Log.h"
 
-namespace fem {
-namespace core {
+namespace fem::core {
 
 Application::Application()
 {
@@ -28,5 +27,4 @@ void Application::Execute()
 	LOG_INFO("Application running...");
 }
 
-} // namespace fem
-} // namespace core
+}
