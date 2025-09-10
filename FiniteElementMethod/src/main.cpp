@@ -1,7 +1,9 @@
-#include "pch.h"
 #include <iostream>
+#include "logger/Log.h"
 
-int main()
-{
+int main() {
 	std::cout << "Hello World!\n";
+
+	fem::logger::Log::Init();
+
 }
