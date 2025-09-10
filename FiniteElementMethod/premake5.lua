@@ -7,9 +7,6 @@ project "App"
   targetdir (OutputDir .. "/%{prj.name}")
   objdir (IntermediateDir .. "/%{prj.name}")
 
-  pchheader "pch.h"
-  pchsource "src/pch.cpp"
-
   files {
     "src/**.h",
     "src/**.cpp"

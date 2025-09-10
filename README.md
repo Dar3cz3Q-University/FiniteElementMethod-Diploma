@@ -20,7 +20,7 @@
   ```
 3. Install dependencies (run from the root folder):
   ```shell
-  ./External/vcpkg/vcpkg install
+  ./External/vcpkg/vcpkg install --triplet x64-windows-static
   ```
 4. Run the setup script in [Scripts](/Scripts) directory,
 5. Open Visual Studio solution,
