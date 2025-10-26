@@ -25,17 +25,19 @@ struct FileIOError
 
 inline std::string ErrorToString(const FileIOError& err)
 {
+	using enum FileIOErrorCode;
+
 	std::string msg = std::format("FileIOError[{}]: ", err.path.generic_string());
 
 	switch (err.code)
 	{
-	case FileIOErrorCode::FileNotFound: msg += "File not found.\n"; break;
-	case FileIOErrorCode::ParentDirectoryNotFound: msg += "Parent directory not found.\n"; break;
-	case FileIOErrorCode::PermissionDenied: msg += "Permission denied.\n"; break;
-	case FileIOErrorCode::NotAFile: msg += "Path is not a regular file.\n"; break;
-	case FileIOErrorCode::ReadFailure: msg += "Failed to read file.\n"; break;
-	case FileIOErrorCode::WriteFailure: msg += "Failed to write file.\n"; break;
-	case FileIOErrorCode::Unknown: msg += "Unknown error.\n"; break;
+	case FileNotFound: msg += "File not found.\n"; break;
+	case ParentDirectoryNotFound: msg += "Parent directory not found.\n"; break;
+	case PermissionDenied: msg += "Permission denied.\n"; break;
+	case NotAFile: msg += "Path is not a regular file.\n"; break;
+	case ReadFailure: msg += "Failed to read file.\n"; break;
+	case WriteFailure: msg += "Failed to write file.\n"; break;
+	case Unknown: msg += "Unknown error.\n"; break;
 	}
 
 	if (!err.message.empty())

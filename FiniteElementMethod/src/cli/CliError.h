@@ -21,12 +21,14 @@ struct CliError
 
 inline std::string ErrorToString(const CliError& err)
 {
+	using enum CliErrorCode;
+
 	std::string msg = "CliErrorCode: ";
 
 	switch (err.code)
 	{
-	case CliErrorCode::ParsingError: msg += "Parsing error.\n"; break;
-	case CliErrorCode::Unknown: msg += "Unknown error.\n"; break;
+	case ParsingError: msg += "Parsing error.\n"; break;
+	case Unknown: msg += "Unknown error.\n"; break;
 	}
 
 	if (!err.message.empty())
