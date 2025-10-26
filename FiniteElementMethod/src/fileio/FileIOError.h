@@ -8,9 +8,11 @@ namespace fem::fileio {
 enum class FileIOErrorCode
 {
 	FileNotFound,
+	ParentDirectoryNotFound,
 	PermissionDenied,
 	NotAFile,
 	ReadFailure,
+	WriteFailure,
 	Unknown
 };
 

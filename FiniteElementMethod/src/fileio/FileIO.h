@@ -14,8 +14,8 @@ namespace fem::fileio {
 	public:
 		FileIO();
 
-		std::expected<std::string, FileIOError> read(const std::filesystem::path& path);
-		void write(const std::filesystem::path& path, const std::string& content);
+		std::expected<std::string, FileIOError> Read(const std::filesystem::path& path);
+		std::expected<void, FileIOError> Write(const std::filesystem::path& path, const std::string& content);
 	};
 
 }
