@@ -8,8 +8,8 @@ namespace fem::core {
 class Application
 {
 public:
-	Application(const ApplicationOptions& options);
-	~Application();
+	explicit Application(const ApplicationOptions& options);
+	~Application() noexcept;
 
 	ExitCode Execute();
 
@@ -18,7 +18,7 @@ private:
 	ApplicationOptions m_Options;
 
 	void Initialize();
-	void TearDown();
+	void TearDown() noexcept;
 };
 
 }
