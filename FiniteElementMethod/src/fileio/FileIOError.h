@@ -21,21 +21,40 @@ struct FileIOError
 	FileIOErrorCode code;
 	std::filesystem::path path;
 	std::string message;
-
-	friend std::ostream& operator<<(std::ostream& os, FileIOError err)
-	{
-		os << "FileIOError[" << err.path << "]: ";
-		switch (err.code)
-		{
-		case FileIOErrorCode::FileNotFound: os << "File not found."; break;
-		case FileIOErrorCode::PermissionDenied: os << "Permission denied."; break;
-		case FileIOErrorCode::NotAFile: os << "Path is not a regular file."; break;
-		case FileIOErrorCode::ReadFailure: os << "Failed to read file."; break;
-		case FileIOErrorCode::Unknown: os << "Unknown error."; break;
-		}
-		if (!err.message.empty()) os << " (" << err.message << ")";
-		return os;
-	}
 };
 
+inline std::string ErrorToString(const FileIOError& err)
+{
+	std::string msg = std::format("FileIOError[{}]: ", err.path.generic_string());
+
+	switch (err.code)
+	{
+	case FileIOErrorCode::FileNotFound: msg += "File not found.\n"; break;
+	case FileIOErrorCode::ParentDirectoryNotFound: msg += "Parent directory not found.\n"; break;
+	case FileIOErrorCode::PermissionDenied: msg += "Permission denied.\n"; break;
+	case FileIOErrorCode::NotAFile: msg += "Path is not a regular file.\n"; break;
+	case FileIOErrorCode::ReadFailure: msg += "Failed to read file.\n"; break;
+	case FileIOErrorCode::WriteFailure: msg += "Failed to write file.\n"; break;
+	case FileIOErrorCode::Unknown: msg += "Unknown error.\n"; break;
+	}
+
+	if (!err.message.empty())
+	{
+		msg += "(";
+		msg += err.message;
+		msg += ")";
+	}
+
+	return msg;
 }
+
+}
+
+template <>
+struct std::formatter<fem::fileio::FileIOError> : std::formatter<std::string_view>
+{
+	auto format(const fem::fileio::FileIOError& err, std::format_context& ctx) const
+	{
+		return std::formatter<std::string_view>::format(fem::fileio::ErrorToString(err), ctx);
+	}
+};

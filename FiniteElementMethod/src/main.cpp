@@ -7,15 +7,15 @@
 #include <print>
 
 int main(int argc, const char* const* argv) {
-	auto options = fem::cli::CliParser().Parse(argc, argv);
+	auto options = fem::cli::CliParser::Parse(argc, argv);
 
 	if (!options)
 	{
-		//std::println("{}", options.error());
-		return static_cast<int>(fem::core::ExitCode::CliError);
+		std::println("{}", options.error());
+		return std::to_underlying(fem::core::ExitCode::CliError);
 	}
 
 	fem::core::Application app(*options);
 	auto status = app.Execute();
-	return static_cast<int>(status);
+	return std::to_underlying(status);
 }

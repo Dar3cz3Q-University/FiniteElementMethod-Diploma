@@ -21,7 +21,7 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	{
 		result = options.parse(argc, argv);
 	}
-	catch (const std::exception& err)
+	catch (const cxxopts::exceptions::parsing& err)
 	{
 		return std::unexpected(CliError{ CliErrorCode::ParsingError, err.what() });
 	}

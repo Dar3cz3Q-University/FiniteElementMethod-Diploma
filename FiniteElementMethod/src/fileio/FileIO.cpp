@@ -5,11 +5,6 @@
 
 namespace fem::fileio {
 
-FileIO::FileIO()
-{
-
-}
-
 std::expected<std::string, FileIOError> FileIO::Read(const std::filesystem::path& path)
 {
 	namespace fs = std::filesystem;
