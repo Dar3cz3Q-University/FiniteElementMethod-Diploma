@@ -9,7 +9,7 @@ namespace fem::cli
 
 enum class CliErrorCode
 {
-	ParsingError,
+	ParsingError = 0,
 	Unknown
 };
 

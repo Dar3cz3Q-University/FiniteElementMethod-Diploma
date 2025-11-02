@@ -7,7 +7,7 @@ namespace fem::fileio {
 
 enum class FileIOErrorCode
 {
-	FileNotFound,
+	FileNotFound = 0,
 	ParentDirectoryNotFound,
 	PermissionDenied,
 	NotAFile,
@@ -27,7 +27,7 @@ inline std::string ErrorToString(const FileIOError& err)
 {
 	using enum FileIOErrorCode;
 
-	std::string msg = std::format("FileIOError[{}]: ", err.path.generic_string());
+	std::string msg = std::format("FileIOError[{}]: ", err.path.string());
 
 	switch (err.code)
 	{

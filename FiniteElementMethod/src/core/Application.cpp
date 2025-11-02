@@ -1,5 +1,9 @@
 #include "Application.h"
 
+#include "mesh/model/Mesh.h"
+#include "mesh/provider/MeshProvider.h"
+
+#include "gmsh.h"
 #include "logger/Log.h"
 
 namespace fem::core {
@@ -19,16 +23,19 @@ void Application::Initialize()
 		return;
 
 	fem::logger::Log::Init();
+	gmsh::initialize();
 
 	LOG_INFO("Initialization completed");
 
 	m_Initialized = true;
 }
 
-void Application::TearDown()
+void Application::TearDown() noexcept
 {
 	if (!m_Initialized)
 		return;
+
+	gmsh::finalize();
 
 	LOG_INFO("Application shutting down...");
 
@@ -42,6 +49,10 @@ ExitCode Application::Execute()
 	Initialize();
 
 	LOG_INFO("Application running...");
+
+	mesh::provider::MeshProvider provider{};
+	auto mesh = provider.LoadMesh("D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\geo\\simple.msh"); // TODO: Get path from options
+
 	return ExitCode::Success;
 }
 

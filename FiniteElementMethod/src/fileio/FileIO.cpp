@@ -7,8 +7,6 @@ namespace fem::fileio {
 
 std::expected<std::string, FileIOError> FileIO::Read(const std::filesystem::path& path)
 {
-	namespace fs = std::filesystem;
-
 	std::error_code ec;
 
 	if (!fs::exists(path, ec))
@@ -45,8 +43,6 @@ std::expected<std::string, FileIOError> FileIO::Read(const std::filesystem::path
 
 std::expected<void, FileIOError> FileIO::Write(const std::filesystem::path& path, const std::string& content)
 {
-    namespace fs = std::filesystem;
-
     std::error_code ec;
 
     if (!fs::exists(path, ec))
