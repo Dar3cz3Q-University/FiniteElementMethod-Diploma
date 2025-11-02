@@ -1,0 +1,23 @@
+#include "MeshProvider.h"
+
+namespace fem::mesh::provider
+{
+
+std::expected<model::Mesh, MeshProviderError> MeshProvider::LoadMesh(const fs::path& path) const
+{
+	const auto ext = path.extension().string();
+
+	if (ext == ".msh")
+	{
+		return m_Loader.Load(path);
+	}
+	else if (ext == ".geo")
+	{
+		return m_Generator.GenerateFromGeo(path);
+	}
+
+	// TODO: Return error
+	return std::unexpected(MeshProviderError{ MeshProviderErrorCode::Unknown, "" });
+}
+
+}
