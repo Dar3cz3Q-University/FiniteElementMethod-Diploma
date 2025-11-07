@@ -23,6 +23,13 @@ private:
 	std::expected<fs::path, MeshProviderError> GenerateMshWithGmsh(const fs::path& path) const;
 };
 
+enum class Stage : int
+{
+	Open,
+	Generate,
+	Write,
+};
+
 }
 
 
