@@ -5,6 +5,7 @@
     "fmt",
     "spdlog",
     "gmsh",
-    "cxxopts"
+    "cxxopts",
+    "eigen3"
   ]
 }
