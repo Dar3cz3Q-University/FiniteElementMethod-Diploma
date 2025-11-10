@@ -1,11 +1,5 @@
 #include "Application.h"
 
-#include "mesh/model/Mesh.h"
-#include "mesh/provider/MeshProvider.h"
-
-#include "gmsh.h"
-#include "logger/Log.h"
-
 namespace fem::core {
 
 Application::Application(const ApplicationOptions& options)
@@ -35,9 +29,9 @@ void Application::TearDown() noexcept
 	if (!m_Initialized)
 		return;
 
-	gmsh::finalize();
-
 	LOG_INFO("Application shutting down...");
+
+	gmsh::finalize();
 
 	m_Initialized = false;
 }
@@ -51,7 +45,20 @@ ExitCode Application::Execute()
 	LOG_INFO("Application running...");
 
 	mesh::provider::MeshProvider provider{};
-	auto mesh = provider.LoadMesh("D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\geo\\simple.msh"); // TODO: Get path from options
+	domain::ElementMatrixBuilder elementBuilder(domain::Material{});
+
+	// TODO: Remove const path
+	m_Options.InputPath = "D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\geo\\simple.msh";
+
+	auto result = provider.LoadMesh(m_Options.InputPath);
+		//.transform([](const auto& data)
+		//{
+		//		return data;
+		//})
+		//.or_else([](const auto& error)
+		//{
+		//	//LOG_ERROR("Error while reading mesh file.");
+		//});
 
 	return ExitCode::Success;
 }
