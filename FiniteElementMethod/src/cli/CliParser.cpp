@@ -1,9 +1,9 @@
 #include "CliParser.h"
 
-#include <cxxopts.hpp>
-
 #include <exception>
 #include <iostream>
+
+#include <cxxopts.hpp>
 
 namespace fem::cli
 {
