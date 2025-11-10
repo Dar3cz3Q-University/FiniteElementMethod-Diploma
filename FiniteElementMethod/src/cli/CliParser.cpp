@@ -1,5 +1,7 @@
 #include "CliParser.h"
 
+#include "core/core.h"
+
 #include <exception>
 #include <iostream>
 

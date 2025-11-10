@@ -1,7 +1,8 @@
 #pragma once
 
-#include "core/core.h"
 #include "CliError.h"
+
+#include "core/core.h"
 
 #include <expected>
 

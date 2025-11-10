@@ -1,5 +1,11 @@
 #include "Application.h"
 
+#include "domain/domain.h"
+#include "logger/logger.h"
+#include "mesh/mesh.h"
+
+#include "gmsh.h"
+
 namespace fem::core {
 
 Application::Application(const ApplicationOptions& options)

@@ -2,7 +2,8 @@
 
 #include "MeshLoader.h"
 #include "MeshProviderError.h"
-#include "mesh/model/Mesh.h"
+
+#include "mesh/model/model.h"
 
 #include <expected>
 #include <filesystem>

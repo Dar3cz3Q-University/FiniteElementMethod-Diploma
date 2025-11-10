@@ -1,8 +1,8 @@
 #pragma once
 
 #include "MeshProviderError.h"
-#include "mesh/provider/GmshTypes.h"
-#include "mesh/model/Mesh.h"
+
+#include "mesh/model/model.h"
 
 #include <expected>
 #include <filesystem>

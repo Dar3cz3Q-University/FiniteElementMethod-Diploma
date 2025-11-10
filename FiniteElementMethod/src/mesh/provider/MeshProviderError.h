@@ -39,6 +39,7 @@ inline std::string ErrorToString(const MeshProviderError& err)
 		break;
 	case ExtensionNotSupported:
 		msg += "Extension of the file is not currently supported.\n";
+		break;
 	case InputPathNotFound:
 		msg += "Input file path not found.\n";
 		break;

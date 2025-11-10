@@ -1,6 +1,9 @@
 #include "MeshLoader.h"
 
+#include "GmshTypes.h"
+
 #include <iostream>
+
 #include "gmsh.h"
 
 namespace fem::mesh::provider

@@ -5,7 +5,7 @@
 
 namespace fem::fileio {
 
-enum class FileIOErrorCode
+enum class FileServiceErrorCode
 {
 	FileNotFound = 0,
 	ParentDirectoryNotFound,
@@ -16,16 +16,16 @@ enum class FileIOErrorCode
 	Unknown
 };
 
-struct FileIOError
+struct FileServiceError
 {
-	FileIOErrorCode code;
+	FileServiceErrorCode code;
 	std::filesystem::path path;
 	std::string message;
 };
 
-inline std::string ErrorToString(const FileIOError& err)
+inline std::string ErrorToString(const FileServiceError& err)
 {
-	using enum FileIOErrorCode;
+	using enum FileServiceErrorCode;
 
 	std::string msg = std::format("FileIOError[{}]: ", err.path.string());
 
@@ -53,9 +53,9 @@ inline std::string ErrorToString(const FileIOError& err)
 }
 
 template <>
-struct std::formatter<fem::fileio::FileIOError> : std::formatter<std::string_view>
+struct std::formatter<fem::fileio::FileServiceError> : std::formatter<std::string_view>
 {
-	auto format(const fem::fileio::FileIOError& err, std::format_context& ctx) const
+	auto format(const fem::fileio::FileServiceError& err, std::format_context& ctx) const
 	{
 		return std::formatter<std::string_view>::format(fem::fileio::ErrorToString(err), ctx);
 	}
