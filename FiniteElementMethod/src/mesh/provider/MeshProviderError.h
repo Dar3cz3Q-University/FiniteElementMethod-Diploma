@@ -9,6 +9,7 @@ namespace fem::mesh::provider
 enum class MeshProviderErrorCode
 {
 	Unknown,
+	ExtensionNotSupported,
 	InputPathNotFound,
 	OutOfMemory,
 	OutputWriteFailed,
@@ -33,31 +34,33 @@ inline std::string ErrorToString(const MeshProviderError& err)
 
 	switch (err.code)
 	{
-	case MeshProviderErrorCode::Unknown:
+	case Unknown:
 		msg += "Unknown error.\n";
 		break;
-	case MeshProviderErrorCode::InputPathNotFound:
+	case ExtensionNotSupported:
+		msg += "Extension of the file is not currently supported.\n";
+	case InputPathNotFound:
 		msg += "Input file path not found.\n";
 		break;
-	case MeshProviderErrorCode::OutOfMemory:
+	case OutOfMemory:
 		msg += "Out of memory while processing mesh.\n";
 		break;
-	case MeshProviderErrorCode::OutputWriteFailed:
+	case OutputWriteFailed:
 		msg += "Failed to write output mesh file.\n";
 		break;
-	case MeshProviderErrorCode::GmshOpenFailed:
+	case GmshOpenFailed:
 		msg += "Failed to open input geometry file in Gmsh.\n";
 		break;
-	case MeshProviderErrorCode::GmshGenerateFailed:
+	case GmshGenerateFailed:
 		msg += "Mesh generation in Gmsh failed.\n";
 		break;
-	case MeshProviderErrorCode::GmshWriteFailed:
+	case GmshWriteFailed:
 		msg += "Failed to write mesh file using Gmsh.\n";
 		break;
-	case MeshProviderErrorCode::IoError:
+	case IoError:
 		msg += "I/O error occurred while accessing file system.\n";
 		break;
-	case MeshProviderErrorCode::ResultMissing:
+	case ResultMissing:
 		msg += "Expected mesh output file is missing after generation.\n";
 		break;
 	}

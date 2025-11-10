@@ -7,6 +7,7 @@
 
 #include <expected>
 #include <filesystem>
+#include <format>
 
 namespace fem::mesh::provider
 {

@@ -16,8 +16,7 @@ std::expected<model::Mesh, MeshProviderError> MeshProvider::LoadMesh(const fs::p
 		return m_Generator.GenerateFromGeo(path);
 	}
 
-	// TODO: Return error
-	return std::unexpected(MeshProviderError{ MeshProviderErrorCode::Unknown, "" });
+	return std::unexpected(MeshProviderError{ MeshProviderErrorCode::ExtensionNotSupported, std::format("Provided extension: {}", ext)});
 }
 
 }

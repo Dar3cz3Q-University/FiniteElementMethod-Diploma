@@ -4,6 +4,7 @@
 #include "Line.h"
 #include "Quad.h"
 
+#include <unordered_map>
 #include <vector>
 
 namespace fem::mesh::model
@@ -16,7 +17,9 @@ public:
 	Mesh(size_t numberOfNodes, size_t numberOfCells, size_t numberOfLines);
 
 	inline void AddNode(const Node& node) {
+		std::size_t localID = m_Nodes.size();
 		m_Nodes.push_back(node);
+		m_NodeIndexByGmshId[node.id] = localID;
 	}
 
 	inline void AddQuad(const Quad& element)
@@ -33,6 +36,8 @@ private:
 	std::vector<Node> m_Nodes;
 	std::vector<Quad> m_Quads;
 	std::vector<Line> m_Lines;
+
+	std::unordered_map<std::size_t, std::size_t> m_NodeIndexByGmshId;
 };
 
 }
