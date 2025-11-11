@@ -4,6 +4,8 @@
 #include "logger/logger.h"
 #include "mesh/mesh.h"
 
+#include <iostream>
+
 #include "gmsh.h"
 
 namespace fem::core {
@@ -51,20 +53,23 @@ ExitCode Application::Execute()
 	LOG_INFO("Application running...");
 
 	mesh::provider::MeshProvider provider{};
-	domain::ElementMatrixBuilder elementBuilder(domain::Material{});
 
 	// TODO: Remove const path
-	m_Options.InputPath = "D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\geo\\simple.msh";
+	m_Options.InputPath = "D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\mesh\\test.msh";
 
-	auto result = provider.LoadMesh(m_Options.InputPath);
-		//.transform([](const auto& data)
-		//{
-		//		return data;
-		//})
-		//.or_else([](const auto& error)
-		//{
-		//	//LOG_ERROR("Error while reading mesh file.");
-		//});
+	const auto& result = provider.LoadMesh(m_Options.InputPath);
+
+	if (!result)
+	{
+		std::cout << result.error().message << "\n";
+		//LOG_ERROR(result.error());
+		return ExitCode::MeshError;
+	}
+
+	domain::ElementMatrixBuilder elementBuilder(domain::Material("steel", 25, 300, 7800, 700));
+	domain::GlobalMatrixBuilder matrixBuilder(*result, elementBuilder);
+
+	const auto& matrices = matrixBuilder.Build();
 
 	return ExitCode::Success;
 }

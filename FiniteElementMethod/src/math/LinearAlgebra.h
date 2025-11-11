@@ -4,6 +4,7 @@
 
 namespace fem
 {
+
 using Mat = Eigen::MatrixXd;
 using Vec = Eigen::VectorXd;
 
