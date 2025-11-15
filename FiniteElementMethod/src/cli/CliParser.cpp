@@ -45,4 +45,4 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	return aptOpts;
 }
 
-}
+} // namespace fem::cli
