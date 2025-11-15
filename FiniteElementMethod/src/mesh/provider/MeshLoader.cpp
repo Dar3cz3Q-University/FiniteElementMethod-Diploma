@@ -2,7 +2,7 @@
 
 #include "GmshTypes.h"
 
-#include <iostream>
+#include "logger/logger.h"
 
 #include "gmsh.h"
 
@@ -11,6 +11,8 @@ namespace fem::mesh::provider
 
 std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& path) const
 {
+	LOG_INFO("Loading mesh using gmsh");
+
 	std::vector<std::size_t> nodeTags;
 	std::vector<double> nodeCoords;
 	std::vector<double> nodeParams;
@@ -57,7 +59,6 @@ std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& p
 			nodeTags[i],
 			nodeCoords[3 * i + 0],
 			nodeCoords[3 * i + 1],
-			nodeCoords[3 * i + 2],
 		};
 
 		mesh.AddNode(n);

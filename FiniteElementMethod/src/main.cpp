@@ -1,6 +1,5 @@
-#include "core/Application.h"
-#include "core/ExitCode.h"
-#include "cli/CliParser.h"
+#include "core/core.h"
+#include "cli/cli.h"
 
 #include <iostream>
 #include <vector>

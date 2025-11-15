@@ -12,11 +12,11 @@ struct Node
 	{
 		struct
 		{
-			double x, y, z;
+			double x, y;
 		};
 		struct
 		{
-			double ksi, eta, zeta;
+			double ksi, eta;
 		};
 	};
 };

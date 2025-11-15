@@ -32,6 +32,26 @@ public:
 		m_Lines.push_back(line);
 	}
 
+	inline const std::vector<Node>& GetNodes() const { return m_Nodes; }
+	inline const std::vector<Quad>& GetQuads() const { return m_Quads; }
+	inline const std::vector<Line>& GetLines() const { return m_Lines; }
+
+	inline const Node& GetNode(const std::size_t id) const
+	{
+		const auto& index = m_NodeIndexByGmshId.at(id);
+		return m_Nodes.at(index);
+	}
+
+	inline const std::size_t GetNodesCount() const
+	{
+		return m_Nodes.size();
+	}
+
+	inline const std::vector<Quad>& GetQuads() const
+	{
+		return m_Quads;
+	}
+
 private:
 	std::vector<Node> m_Nodes;
 	std::vector<Quad> m_Quads;

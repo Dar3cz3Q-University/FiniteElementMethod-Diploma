@@ -1,5 +1,7 @@
 #include "MeshGenerator.h"
 
+#include "logger/logger.h"
+
 #include "gmsh.h"
 
 namespace fem::mesh::provider
@@ -7,6 +9,8 @@ namespace fem::mesh::provider
 
 std::expected<model::Mesh, MeshProviderError> MeshGenerator::GenerateFromGeo(const fs::path& path) const
 {
+	LOG_INFO("Generating mesh from .geo file using gmsh");
+
 	auto mshPath = GenerateMshWithGmsh(path);
 
 	if (!mshPath)
