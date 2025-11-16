@@ -1,47 +1,73 @@
 ﻿#pragma once
 
 #include "IntegrationSchema.h"
-#include "LegendreValues.h"
 
 #include <array>
-#include <expected>
 #include <vector>
 
 namespace fem::domain::integration
 {
 
-// Precomputed integration data for a 4-node quadrilateral (Quad4) element
-// on the reference domain (ξ, η) ∈ [-1, 1] x [-1, 1].
-//
-// For a given 1D Gauss order nGauss, we build a tensor-product integration
-// rule with nPoints = nGauss * nGauss integration points in 2D.
-//
-// For each integration point 'gp' (gp = 0 .. nPoints-1) we store:
-//
-//   - ksi[gp], eta[gp]      : local coordinates (ξ, η)
-//   - weights[gp]           : 2D Gauss weight w_ξ * w_η
-//   - N[gp][a]              : value of shape function N_a(ξ, η) for node a = 0..3
-//   - dN_dKsi[gp][a]        : ∂N_a / ∂ξ at this integration point
-//   - dN_dEta[gp][a]        : ∂N_a / ∂η at this integration point
-//
-// All these values are defined on the reference element only and can be
-// reused for every Quad4 element in the mesh.
-
+/// <summary>
+/// Stores precomputed data for Gauss–Legendre integration over a 4-node quadrilateral
+/// element in natural coordinates (ξ, η).
+/// </summary>
 struct QuadIntegrationData
 {
-	int nGauss{};
-	int nPoints{};
+    /// <summary>
+    /// Total number of Gauss points used in the integration (product of points per direction).
+    /// </summary>
+    int nGauss{};
 
-	std::vector<double> ksi;
-	std::vector<double> eta;
-	std::vector<double> weights;
+    /// <summary>
+    /// Number of integration points per direction (ξ and η).
+    /// </summary>
+    int nPoints{};
 
-	std::vector<std::array<double, 4>> N;
-	std::vector<std::array<double, 4>> dN_dKsi;
-	std::vector<std::array<double, 4>> dN_dEta;
+    /// <summary>
+    /// ξ-coordinates of integration points in the reference element [-1, 1] × [-1, 1].
+    /// </summary>
+    std::vector<double> ksi;
+
+    /// <summary>
+    /// η-coordinates of integration points in the reference element [-1, 1] × [-1, 1].
+    /// </summary>
+    std::vector<double> eta;
+
+    /// <summary>
+    /// Integration weights associated with each Gauss point.
+    /// </summary>
+    std::vector<double> weights;
+
+    /// <summary>
+    /// Shape function values N1..N4 evaluated at each integration point.
+    /// Each array corresponds to one Gauss point and contains values for 4 nodes.
+    /// </summary>
+    std::vector<std::array<double, 4>> N;
+
+    /// <summary>
+    /// Partial derivatives of shape functions with respect to ξ (dN/dξ)
+    /// evaluated at each integration point. Each array contains derivatives for 4 nodes.
+    /// </summary>
+    std::vector<std::array<double, 4>> dN_dKsi;
+
+    /// <summary>
+    /// Partial derivatives of shape functions with respect to η (dN/dη)
+    /// evaluated at each integration point. Each array contains derivatives for 4 nodes.
+    /// </summary>
+    std::vector<std::array<double, 4>> dN_dEta;
 };
 
-// TODO: Create custom error type
-QuadIntegrationData BuildQuadIntegrationData(IntegrationSchema schema);
+/// <summary>
+/// Builds quadrilateral integration data (Gauss points, weights, shape functions and
+/// their derivatives) for a given Gauss–Legendre integration scheme.
+/// </summary>
+/// <param name="schema">
+/// Integration scheme specifying the number of Gauss points per direction.
+/// </param>
+/// <returns>
+/// A fully initialized <see cref="QuadIntegrationData"/> structure for the given scheme.
+/// </returns>
+QuadIntegrationData BuildQuadIntegrationData(IntegrationSchema schema); // TODO: Create custom error type
 
 }

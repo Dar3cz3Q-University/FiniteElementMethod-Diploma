@@ -1,6 +1,10 @@
 #include "QuadIntegrationData.h"
 
+#include "LegendreValues.h"
+
 #include "logger/logger.h"
+
+#include <expected>
 
 namespace fem::domain::integration
 {

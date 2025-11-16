@@ -33,4 +33,9 @@ const QuadIntegrationData& GetQuadIntegrationData(IntegrationSchema schema)
 	}
 }
 
+const LineIntegrationData& GetLineIntegrationData(IntegrationSchema schema)
+{
+	// TODO: insert return statement here
+}
+
 }
