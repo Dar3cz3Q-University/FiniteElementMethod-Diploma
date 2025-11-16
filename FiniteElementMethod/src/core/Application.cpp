@@ -69,6 +69,7 @@ ExitCode Application::Execute()
 	domain::ElementMatrixBuilder elementBuilder(
 		domain::Material("steel", 25, 7800, 700),
 		domain::BoundaryCondition("test", domain::BoundaryConditionType::Convection, 1200, 300 ));
+
 	domain::GlobalMatrixBuilder matrixBuilder(*result, elementBuilder);
 
 	const auto& matrices = matrixBuilder.Build();
