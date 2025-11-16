@@ -4,5 +4,4 @@ root = true
 
 insert_final_newline = true
 
-cpp_brace_style = same_line
 cpp_indent_namespace_contents = false
