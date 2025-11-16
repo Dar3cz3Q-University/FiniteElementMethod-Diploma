@@ -55,9 +55,9 @@ ExitCode Application::Execute()
 	mesh::provider::MeshProvider provider{};
 
 	// TODO: Remove const path
-	m_Options.InputPath = "D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\mesh\\test.msh";
+	m_Options.MeshInputPath = "D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\mesh\\test.msh";
 
-	const auto& result = provider.LoadMesh(m_Options.InputPath);
+	const auto& result = provider.LoadMesh(m_Options.MeshInputPath);
 
 	if (!result)
 	{
@@ -66,7 +66,9 @@ ExitCode Application::Execute()
 		return ExitCode::MeshError;
 	}
 
-	domain::ElementMatrixBuilder elementBuilder(domain::Material("steel", 25, 300, 7800, 700));
+	domain::ElementMatrixBuilder elementBuilder(
+		domain::Material("steel", 25, 7800, 700),
+		domain::BoundaryCondition("test", domain::BoundaryConditionType::Convection, 1200, 300 ));
 	domain::GlobalMatrixBuilder matrixBuilder(*result, elementBuilder);
 
 	const auto& matrices = matrixBuilder.Build();

@@ -21,7 +21,7 @@ struct ApplicationOptions
     /// Path to the input file containing mesh.
     /// May be empty if not provided.
     /// </summary>
-    std::filesystem::path InputPath;
+    std::filesystem::path MeshInputPath;
 };
 
 } // namespace fem::core

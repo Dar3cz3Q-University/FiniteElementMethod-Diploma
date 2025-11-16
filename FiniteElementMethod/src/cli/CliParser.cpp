@@ -16,7 +16,7 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 
 	options.add_options()
 		("h,help", "Help page")
-		("input", "Input file", cxxopts::value<std::string>());
+		("mesh", "Input mesh file", cxxopts::value<std::string>());
 
 	cxxopts::ParseResult result;
 	try
@@ -37,9 +37,9 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 		return aptOpts;
 	}
 
-	if (result.count("input"))
+	if (result.count("mesh"))
 	{
-		aptOpts.InputPath = result["input"].as<std::string>();
+		aptOpts.MeshInputPath = result["input"].as<std::string>();
 	}
 
 	return aptOpts;
