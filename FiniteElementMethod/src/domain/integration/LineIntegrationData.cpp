@@ -59,7 +59,7 @@ LineIntegrationData BuildLineIntegrationData(IntegrationSchema schema)
         LOG_TRACE("IP = {}, ksi = {:.6f}, w = {:.6f}", i, ksi, w);
         LOG_TRACE("N = [{:.6f}, {:.6f}]", Nvals[0], Nvals[1]);
         LOG_TRACE("dN/dKsi = [{:.6f}, {:.6f}]", dKsi[0], dKsi[1]);
-        LOG_TRACE("N·N^T = [[{:.6f}, {:.6f}], [{:.6f}, {:.6f}]]",
+        LOG_TRACE("N*N^T = [[{:.6f}, {:.6f}], [{:.6f}, {:.6f}]]",
             N_N_T_matrix[0][0], N_N_T_matrix[0][1],
             N_N_T_matrix[1][0], N_N_T_matrix[1][1]);
     }
