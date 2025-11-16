@@ -11,7 +11,7 @@ namespace fem::mesh::provider
 
 std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& path) const
 {
-	LOG_INFO("Loading mesh using gmsh");
+	LOG_INFO("Loading mesh using gmsh from: {}", path.string());
 
 	std::vector<std::size_t> nodeTags;
 	std::vector<double> nodeCoords;
@@ -21,13 +21,21 @@ std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& p
 	std::vector<std::vector<std::size_t>> elemTags;
 	std::vector<std::vector<std::size_t>> elemNodeTags;
 
-	std::vector<std::size_t> boundaryNodes; // TODO: Read boundary nodes
+	std::vector<std::pair<int, int>> physicalGroups;
 
 	try
 	{
 		gmsh::open(path.string());
+
 		gmsh::model::mesh::getNodes(nodeTags, nodeCoords, nodeParams);
 		gmsh::model::mesh::getElements(elemTypes, elemTags, elemNodeTags);
+
+		// Get physical groups only for lines (dim=1)
+		gmsh::model::getPhysicalGroups(physicalGroups, 1);
+
+		LOG_INFO("Found {} nodes", nodeTags.size());
+		LOG_INFO("Found {} element types", elemTypes.size());
+		LOG_INFO("Found {} physical groups for lines", physicalGroups.size());
 	}
 	catch (...)
 	{
@@ -51,6 +59,8 @@ std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& p
 		}
 	}
 
+	LOG_INFO("Mesh contains: {} quads, {} lines", quadCount, lineCount);
+
 	model::Mesh mesh(nodeTags.size(), quadCount, lineCount);
 
 	for (std::size_t i = 0; i < nodeTags.size(); i++)
@@ -63,6 +73,8 @@ std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& p
 
 		mesh.AddNode(n);
 	}
+
+	LOG_TRACE("Added {} nodes", nodeTags.size());
 
 	for (std::size_t i = 0; i < elemTypes.size(); i++)
 	{
@@ -100,6 +112,57 @@ std::expected<model::Mesh, MeshProviderError> MeshLoader::Load(const fs::path& p
 				mesh.AddLine(l);
 			}
 		}
+	}
+
+	LOG_TRACE("Added {} quads and {} lines", quadCount, lineCount);
+
+	try
+	{
+		for (const auto& [dim, tag] : physicalGroups)
+		{
+			model::PhysicalGroup group;
+			group.dimension = dim;
+			group.tag = tag;
+
+			gmsh::model::getPhysicalName(dim, tag, group.name);
+
+			LOG_TRACE("Processing physical group: '{}' (tag={}, dim={})", group.name, tag, dim);
+
+			std::vector<int> entities;
+			gmsh::model::getEntitiesForPhysicalGroup(dim, tag, entities);
+
+			for (int entity : entities)
+			{
+				std::vector<int> entElemTypes;
+				std::vector<std::vector<std::size_t>> entElemTags;
+				std::vector<std::vector<std::size_t>> entElemNodeTags;
+
+				gmsh::model::mesh::getElements(
+					entElemTypes,
+					entElemTags,
+					entElemNodeTags,
+					dim,
+					entity
+				);
+
+				for (const auto& elemTagsVec : entElemTags)
+				{
+					for (std::size_t lineID : elemTagsVec)
+					{
+						group.lineIDs.push_back(lineID);
+					}
+				}
+			}
+
+			LOG_INFO("Physical group '{}' contains {} lines", group.name, group.lineIDs.size());
+
+			mesh.AddPhysicalGroup(group);
+		}
+	}
+	catch (...)
+	{
+		// TODO: Return error
+		return std::unexpected(MeshProviderError{ MeshProviderErrorCode::Unknown, "" });
 	}
 
 	return mesh;
