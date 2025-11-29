@@ -5,7 +5,7 @@ pushd ..
 
 echo.
 echo [1/2] Installing vcpkg dependencies...
-External\vcpkg\vcpkg install --triplet=x64-windows-static
+External\vcpkg\vcpkg install --triplet=x64-windows
 
 if %errorlevel% neq 0 (
     popd

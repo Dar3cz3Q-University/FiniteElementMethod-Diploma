@@ -1,11 +1,15 @@
 local vcpkg = require "vcpkg-manifest"
 
-local libraries = {
+local debugLibraries = {
+  "fmtd",
+  "spdlogd",
+  "gmsh.dll"
+}
+
+local releaseLibraries = {
   "fmt",
   "spdlog",
-  "gmsh",
-  "cxxopts",
-  "eigen3"
+  "gmsh.dll"
 }
 
 workspace "FiniteElementMethod"
@@ -19,7 +23,6 @@ workspace "FiniteElementMethod"
   flags { "MultiProcessorCompile" }
 
   filter "system:windows"
-    staticruntime "on"
     buildoptions { "/utf-8", "/openmp" }
   filter "system:linux"
     buildoptions { "-fopenmp" }
@@ -31,7 +34,7 @@ workspace "FiniteElementMethod"
 
   local vcpkgTriplet = ""
   if os.target() == "windows" then
-    vcpkgTriplet = "x64-windows-static"
+    vcpkgTriplet = "x64-windows"
   elseif os.target() == "linux" then
     vcpkgTriplet = "x64-linux"
   end
@@ -45,14 +48,14 @@ workspace "FiniteElementMethod"
     runtime "Debug"
     symbols "on"
     libdirs { vcpkgInstalled .. "/debug/lib" }
+    links(debugLibraries)
   filter "configurations:Release"
     defines { "NDEBUG" }
     runtime "Release"
     optimize "on"
     libdirs { vcpkgInstalled .. "/lib" }
+    links(releaseLibraries)
   filter {}
-
-  links(libraries)
 
   filter "system:windows"
     links {}
