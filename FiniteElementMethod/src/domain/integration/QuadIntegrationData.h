@@ -9,8 +9,8 @@ namespace fem::domain::integration
 {
 
 /// <summary>
-/// Stores precomputed data for Gauss–Legendre integration over a 4-node quadrilateral
-/// element in natural coordinates (ξ, η).
+/// Stores precomputed data for Gauss-Legendre integration over a 4-node quadrilateral
+/// element in natural coordinates (ksi, eta).
 /// </summary>
 struct QuadIntegrationData
 {
@@ -20,17 +20,17 @@ struct QuadIntegrationData
     int nGauss{};
 
     /// <summary>
-    /// Number of integration points per direction (ξ and η).
+    /// Number of integration points per direction (ksi and eta).
     /// </summary>
     int nPoints{};
 
     /// <summary>
-    /// ξ-coordinates of integration points in the reference element [-1, 1] × [-1, 1].
+    /// ksi - coordinates of integration points in the reference element [-1, 1] x [-1, 1].
     /// </summary>
     std::vector<double> ksi;
 
     /// <summary>
-    /// η-coordinates of integration points in the reference element [-1, 1] × [-1, 1].
+    /// eta - coordinates of integration points in the reference element [-1, 1] x [-1, 1].
     /// </summary>
     std::vector<double> eta;
 
@@ -46,13 +46,13 @@ struct QuadIntegrationData
     std::vector<std::array<double, 4>> N;
 
     /// <summary>
-    /// Partial derivatives of shape functions with respect to ξ (dN/dξ)
+    /// Partial derivatives of shape functions with respect to ksi (dN/dksi)
     /// evaluated at each integration point. Each array contains derivatives for 4 nodes.
     /// </summary>
     std::vector<std::array<double, 4>> dN_dKsi;
 
     /// <summary>
-    /// Partial derivatives of shape functions with respect to η (dN/dη)
+    /// Partial derivatives of shape functions with respect to eta (dN/deta)
     /// evaluated at each integration point. Each array contains derivatives for 4 nodes.
     /// </summary>
     std::vector<std::array<double, 4>> dN_dEta;
@@ -60,7 +60,7 @@ struct QuadIntegrationData
 
 /// <summary>
 /// Builds quadrilateral integration data (Gauss points, weights, shape functions and
-/// their derivatives) for a given Gauss–Legendre integration scheme.
+/// their derivatives) for a given Gauss-Legendre integration scheme.
 /// </summary>
 /// <param name="schema">
 /// Integration scheme specifying the number of Gauss points per direction.

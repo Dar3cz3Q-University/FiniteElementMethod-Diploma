@@ -12,17 +12,17 @@ namespace fem::domain
 struct ElementMatrices
 {
     /// <summary>
-    /// Element conductivity matrix H (4×4).
+    /// Element conductivity matrix H (4-4).
     /// </summary>
     Mat4 H;
 
     /// <summary>
-    /// Element capacity matrix C (4×4).
+    /// Element capacity matrix C (4-4).
     /// </summary>
     Mat4 C;
 
     /// <summary>
-    /// Element load vector P (4×1).
+    /// Element load vector P (4-1).
     /// </summary>
     Vec4 P;
 };

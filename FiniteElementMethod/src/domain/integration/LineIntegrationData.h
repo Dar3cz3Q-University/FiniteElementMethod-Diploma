@@ -8,8 +8,8 @@ namespace fem::domain::integration
 {
 
 /// <summary>
-/// Stores precomputed data for Gauss–Legendre integration over a 2-node line
-/// element in natural coordinates (ξ).
+/// Stores precomputed data for Gauss-Legendre integration over a 2-node line
+/// element in natural coordinates (-).
 /// </summary>
 struct LineIntegrationData
 {
@@ -19,7 +19,7 @@ struct LineIntegrationData
     int nPoints{};
 
     /// <summary>
-    /// ξ-coordinates of integration points in the reference element [-1, 1].
+    /// --coordinates of integration points in the reference element [-1, 1].
     /// </summary>
     std::vector<double> ksi;
 
@@ -35,16 +35,16 @@ struct LineIntegrationData
     std::vector<std::array<double, 2>> N;
 
     /// <summary>
-    /// Partial derivatives of shape functions with respect to ξ (dN/dξ)
+    /// Partial derivatives of shape functions with respect to - (dN/d-)
     /// evaluated at each integration point. Each array contains derivatives for 2 nodes.
-    /// For linear elements: dN1/dξ = -0.5, dN2/dξ = 0.5 (constant).
+    /// For linear elements: dN1/d- = -0.5, dN2/d- = 0.5 (constant).
     /// </summary>
     std::vector<std::array<double, 2>> dN_dKsi;
 
     /// <summary>
-    /// Precomputed N·N^T matrices for each integration point.
+    /// Precomputed N-N^T matrices for each integration point.
     /// This is used for boundary condition assembly (e.g., convection term).
-    /// Each matrix is 2×2 representing outer product of shape functions.
+    /// Each matrix is 2-2 representing outer product of shape functions.
     /// </summary>
     std::vector<std::array<std::array<double, 2>, 2>> N_N_T;
 };

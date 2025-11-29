@@ -1,6 +1,6 @@
 #include <sstream>
 
-#include "Eigen/Dense";
+#include "Eigen/Dense"
 
 namespace fem
 {

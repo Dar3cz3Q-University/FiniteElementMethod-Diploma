@@ -8,7 +8,7 @@ namespace fem::domain::integration
 {
 
 /// <summary>
-/// Retrieves precomputed Gauss–Legendre integration data for a 4-node quadrilateral
+/// Retrieves precomputed Gauss-Legendre integration data for a 4-node quadrilateral
 /// element corresponding to the specified integration scheme.
 /// </summary>
 /// <param name="schema">
@@ -21,7 +21,7 @@ namespace fem::domain::integration
 const QuadIntegrationData& GetQuadIntegrationData(IntegrationSchema schema);
 
 /// <summary>
-/// Retrieves precomputed Gauss–Legendre integration data for a 2-node line element
+/// Retrieves precomputed Gauss-Legendre integration data for a 2-node line element
 /// corresponding to the selected integration scheme.
 /// </summary>
 /// <param name="schema">
