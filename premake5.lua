@@ -23,7 +23,8 @@ workspace "FiniteElementMethod"
   flags { "MultiProcessorCompile" }
 
   filter "system:windows"
-    buildoptions { "/utf-8", "/openmp" }
+    buildoptions { "/utf-8", "/openmp", "/external:W0" }
+    externalwarnings "Off"
   filter "system:linux"
     buildoptions { "-fopenmp" }
     linkoptions { "-fopenmp" }
