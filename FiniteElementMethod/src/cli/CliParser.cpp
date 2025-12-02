@@ -16,7 +16,8 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 
 	options.add_options()
 		("h,help", "Help page")
-		("mesh", "Input mesh file", cxxopts::value<std::string>());
+		("mesh", "Input mesh file", cxxopts::value<std::string>())
+		("nthreads", "Number of threads", cxxopts::value<std::size_t>());
 
 	cxxopts::ParseResult result;
 	try
@@ -40,6 +41,11 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	if (result.count("mesh"))
 	{
 		aptOpts.MeshInputPath = result["input"].as<std::string>();
+	}
+
+	if (result.count("nthreads"))
+	{
+		aptOpts.NumberOfThreads = result["nthreads"].as<std::size_t>();
 	}
 
 	return aptOpts;

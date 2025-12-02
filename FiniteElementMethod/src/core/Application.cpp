@@ -5,14 +5,18 @@
 #include "mesh/mesh.h"
 
 #include <iostream>
+#include <thread>
 
 #include "gmsh.h"
+#include <omp.h>
 
-namespace fem::core {
+namespace fem::core
+{
 
 Application::Application(const ApplicationOptions& options)
 	: m_Options(options)
-{}
+{
+}
 
 Application::~Application()
 {
@@ -26,6 +30,15 @@ void Application::Initialize()
 
 	fem::logger::Log::Init();
 	gmsh::initialize();
+
+	size_t nThreads = std::thread::hardware_concurrency();
+
+	if (m_Options.NumberOfThreads.has_value())
+	{
+		nThreads = m_Options.NumberOfThreads.value();
+	}
+
+	omp_set_num_threads(nThreads);
 
 	LOG_INFO("Initialization completed");
 
@@ -68,7 +81,7 @@ ExitCode Application::Execute()
 
 	domain::ElementMatrixBuilder elementBuilder(
 		domain::Material("steel", 25, 7800, 700),
-		domain::BoundaryCondition("test", domain::BoundaryConditionType::Convection, 1200, 300 ));
+		domain::BoundaryCondition("test", domain::BoundaryConditionType::Convection, 1200, 300));
 
 	domain::GlobalMatrixBuilder matrixBuilder(*result, elementBuilder);
 
