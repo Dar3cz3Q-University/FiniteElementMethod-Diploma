@@ -22,11 +22,6 @@ struct Material
     double conductivity;
 
     /// <summary>
-    /// Coefficient of linear thermal expansion α [1/K].
-    /// </summary>
-    double alpha;
-
-    /// <summary>
     /// Density of the material [kg/m^3].
     /// </summary>
     double density;

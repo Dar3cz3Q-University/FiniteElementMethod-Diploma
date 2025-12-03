@@ -3,6 +3,8 @@
 #include "logger/logger.h"
 
 #include <iostream>
+#include <vector>
+#include <omp.h>
 
 namespace fem::domain
 {
@@ -11,30 +13,116 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 {
 	LOG_INFO("Calculating H, C matrices and P vector");
 
-	const auto& numberOfNodes = m_Mesh.GetNodesCount();
+	const auto numberOfNodes = m_Mesh.GetNodesCount();
+	const auto& quads = m_Mesh.GetQuads();
+	const auto numberOfElements = quads.size();
+	const auto& lines = m_Mesh.GetLines();
+	const auto numberOfLines = lines.size();
 
-	GlobalMatrices out;
-	out.H.setZero(numberOfNodes, numberOfNodes);
-	out.C.setZero(numberOfNodes, numberOfNodes);
-	out.P.setZero(numberOfNodes, 1);
+	TripletsVector tripletsH;
+	TripletsVector tripletsC;
+	Vec globalP = Vec::Zero(numberOfNodes);
 
-	// Calculate H, C, P for each Quad
-	for (auto& element : m_Mesh.GetQuads())
+	tripletsH.reserve(numberOfElements * 16); // TODO: Move number to variable
+	tripletsC.reserve(numberOfElements * 16);
+
+#pragma omp parallel
 	{
-		const auto& res = m_Builder.BuildQuadMatrices(m_Mesh, element);
-		if (!res) continue;
+		TripletsVector localTripletsH;
+		TripletsVector localTripletsC;
+		Vec localP = Vec::Zero(numberOfNodes);
 
-		std::cout << res->H << "\n";
-		std::cout << "---" << "\n";
-		std::cout << res->C << "\n";
-		std::cout << "-----" << "\n";
+#pragma omp for nowait
+		for (int i = 0; i < numberOfElements; i++)
+		{
+			const auto& element = quads.at(i);
+			auto res = m_Builder.BuildQuadMatrices(m_Mesh, element);
+			if (!res) continue; // TODO: Handle error
+
+			AssembleQuadElement(element, *res, localTripletsH, localTripletsC, localP);
+		}
+
+#pragma omp critical
+		{
+			tripletsH.insert(tripletsH.end(), localTripletsH.begin(), localTripletsH.end());
+			tripletsC.insert(tripletsC.end(), localTripletsC.begin(), localTripletsC.end());
+			globalP += localP;
+		}
 	}
 
-	// Calculate H, C, P for each Line
+	for (auto& line : lines)
+	{
+		const auto& res = m_Builder.BuildLineBoundaryMatrices(m_Mesh, line);
+		if (!res) continue;
 
-	// Aggregate matrices
+		AssembleLineElement(line, *res, tripletsH, globalP);
+	}
+
+	GlobalMatrices out;
+	out.H.resize(numberOfNodes, numberOfNodes);
+	out.C.resize(numberOfNodes, numberOfNodes);
+	out.P = globalP;
+
+	out.H.setFromTriplets(tripletsH.begin(), tripletsH.end());
+	out.C.setFromTriplets(tripletsC.begin(), tripletsC.end());
+
+	std::cout << out.H << "\n";
+	std::cout << "---" << "\n";
+	std::cout << out.C << "\n";
+	std::cout << "-----" << "\n";
+	std::cout << out.P << "\n";
+	std::cout << "-----" << "\n";
 
 	return out;
+}
+
+void GlobalMatrixBuilder::AssembleQuadElement(const mesh::model::Quad& element, const ElementMatrices& res, TripletsVector& localTripletsH, TripletsVector& localTripletsC, Vec& localP) const
+{
+	std::array<std::size_t, 4> nodeIds{};
+	for (int localNode = 0; localNode < 4; ++localNode)
+	{
+		const auto gmshId = element.nodeIDs[localNode];
+		nodeIds[localNode] = m_Mesh.GetNodeLocalId(gmshId);
+	}
+
+	for (int iLocal = 0; iLocal < 4; ++iLocal)
+	{
+		const auto globalI = nodeIds[iLocal];
+
+		for (int jLocal = 0; jLocal < 4; ++jLocal)
+		{
+			const auto globalJ = nodeIds[jLocal];
+
+			localTripletsH.emplace_back(globalI, globalJ, res.H(iLocal, jLocal));
+			localTripletsC.emplace_back(globalI, globalJ, res.C(iLocal, jLocal));
+		}
+
+		localP(globalI) += res.P(iLocal);
+	}
+}
+
+void GlobalMatrixBuilder::AssembleLineElement(const mesh::model::Line& element, const BoundaryMatrices& res, TripletsVector& localTripletsH, Vec& localP) const
+{
+	std::array<std::size_t, 2> nodeIds{};
+	for (int localNode = 0; localNode < 2; ++localNode)
+	{
+		const auto gmshId = element.nodeIDs[localNode];
+		nodeIds[localNode] = m_Mesh.GetNodeLocalId(gmshId);
+	}
+
+	for (int iLocal = 0; iLocal < 2; ++iLocal)
+	{
+		const auto globalI = nodeIds[iLocal];
+
+		for (int jLocal = 0; jLocal < 2; ++jLocal)
+		{
+			const auto globalJ = nodeIds[jLocal];
+
+			localTripletsH.emplace_back(globalI, globalJ, res.H(iLocal, jLocal));
+		}
+
+		localP(globalI) += res.P(iLocal);
+	}
 }
 
 }

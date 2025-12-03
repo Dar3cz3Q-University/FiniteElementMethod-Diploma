@@ -7,8 +7,8 @@ namespace fem::domain
 
 struct GlobalMatrices
 {
-	Mat H;
-	Mat C;
+	SpMat H;
+	SpMat C;
 	Vec P;
 };
 

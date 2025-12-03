@@ -25,6 +25,7 @@ std::expected<ElementMatrices, int> ElementMatrixBuilder::BuildQuadMatrices(cons
 	ElementMatrices out;
 	out.H.setZero();
 	out.C.setZero();
+	out.P.setZero();
 
 	// TODO: Create mapper from Node to Vec2
 	std::array<Vec2, 4> nodes{};
@@ -99,6 +100,69 @@ std::expected<ElementMatrices, int> ElementMatrixBuilder::BuildQuadMatrices(cons
 		}
 	}
 	
+	return out;
+}
+
+std::expected<BoundaryMatrices, int> ElementMatrixBuilder::BuildLineBoundaryMatrices(const mesh::model::Mesh& mesh, const mesh::model::Line& line) const
+{
+	auto schema = integration::IntegrationSchema::Gauss2;
+
+	LOG_TRACE(
+		"Building boundary matrices for line nodes=[{}, {}] using Gauss{}",
+		line.nodeIDs[0], line.nodeIDs[1], std::to_underlying(schema)
+	);
+
+	BoundaryMatrices out;
+	out.H.setZero();
+	out.P.setZero();
+
+	const auto& node1 = mesh.GetNode(line.nodeIDs[0]);
+	const auto& node2 = mesh.GetNode(line.nodeIDs[1]);
+
+	Vec2 p1(node1.x, node1.y);
+	Vec2 p2(node2.x, node2.y);
+
+	LOG_TRACE("Node 1 (id={}): x={:.6f}, y={:.6f}",
+		line.nodeIDs[0], node1.x, node1.y);
+	LOG_TRACE("Node 2 (id={}): x={:.6f}, y={:.6f}",
+		line.nodeIDs[1], node2.x, node2.y);
+
+	double length = (p2 - p1).norm();
+	double detJ = length / 2.0;
+
+	LOG_TRACE("Edge length: {:.6f}, detJ: {:.6f}", length, detJ);
+
+	const auto& lineData = integration::GetLineIntegrationData(schema);
+
+	LOG_TRACE("Using integration schema: Gauss{}, nPoints={}",
+		std::to_underlying(schema), lineData.nPoints);
+
+	double alpha = m_BoundaryCondition.alpha;
+	double ambientTemperature = m_BoundaryCondition.ambientTemperature;
+
+	LOG_TRACE("Convection BC: alpha={:.2f} W/(m^2*K), T_ambient={:.2f} K",
+		alpha, ambientTemperature);
+
+	for (int i = 0; i < lineData.nPoints; ++i)
+	{
+		double xi = lineData.ksi[i];
+		double w = lineData.weights[i];
+		const auto& N = lineData.N[i];
+		const auto& N_N_T = lineData.N_N_T[i];
+
+		LOG_TRACE("IP {}: xi={:.6f}, w={:.6f}, N=[{:.6f}, {:.6f}]",
+			i, xi, w, N[0], N[1]);
+
+		Mat2 N_N_T_local;
+		N_N_T_local << N_N_T[0][0], N_N_T[0][1],
+			N_N_T[1][0], N_N_T[1][1];
+
+		out.H += alpha * N_N_T_local * detJ * w;
+
+		Vec2 N_eigen(N[0], N[1]);
+		out.P += alpha * ambientTemperature * N_eigen * detJ * w;
+	}
+
 	return out;
 }
 
