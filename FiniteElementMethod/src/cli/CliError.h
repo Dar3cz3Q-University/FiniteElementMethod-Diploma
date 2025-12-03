@@ -12,15 +12,15 @@ namespace fem::cli
 /// </summary>
 enum class CliErrorCode
 {
-    /// <summary>
-    /// Error occurred while parsing command-line arguments or input data.
-    /// </summary>
-    ParsingError = 0,
+	/// <summary>
+	/// Error occurred while parsing command-line arguments or input data.
+	/// </summary>
+	ParsingError = 0,
 
-    /// <summary>
-    /// Unspecified or unexpected error type.
-    /// </summary>
-    Unknown
+	/// <summary>
+	/// Unspecified or unexpected error type.
+	/// </summary>
+	Unknown
 };
 
 /// <summary>
@@ -28,43 +28,43 @@ enum class CliErrorCode
 /// </summary>
 struct CliError
 {
-    /// <summary>
-    /// Error code describing the type of the CLI error.
-    /// </summary>
-    CliErrorCode code;
+	/// <summary>
+	/// Error code describing the type of the CLI error.
+	/// </summary>
+	CliErrorCode code;
 
-    /// <summary>
-    /// Human-readable description of the error. May be empty.
-    /// </summary>
-    std::string message;
+	/// <summary>
+	/// Human-readable description of the error. May be empty.
+	/// </summary>
+	std::string message;
+
+	/// <summary>
+	/// Converts a <see cref="CliError"/> instance to a human-readable string representation.
+	/// </summary>
+	/// <param name="err">CLI error to be converted.</param>
+	/// <returns>String containing the error code and optional message.</returns>
+	std::string ToString() const
+	{
+		using enum CliErrorCode;
+
+		std::string msg = "CliErrorCode: ";
+
+		switch (code)
+		{
+		case ParsingError: msg += "Parsing error.\n"; break;
+		case Unknown:      msg += "Unknown error.\n"; break;
+		}
+
+		if (!message.empty())
+		{
+			msg += "(";
+			msg += message;
+			msg += ")";
+		}
+
+		return msg;
+	}
 };
-
-/// <summary>
-/// Converts a <see cref="CliError"/> instance to a human-readable string representation.
-/// </summary>
-/// <param name="err">CLI error to be converted.</param>
-/// <returns>String containing the error code and optional message.</returns>
-inline std::string ErrorToString(const CliError& err)
-{
-    using enum CliErrorCode;
-
-    std::string msg = "CliErrorCode: ";
-
-    switch (err.code)
-    {
-    case ParsingError: msg += "Parsing error.\n"; break;
-    case Unknown:      msg += "Unknown error.\n"; break;
-    }
-
-    if (!err.message.empty())
-    {
-        msg += "(";
-        msg += err.message;
-        msg += ")";
-    }
-
-    return msg;
-}
 
 } // namespace fem::cli
 
@@ -74,8 +74,8 @@ inline std::string ErrorToString(const CliError& err)
 template <>
 struct std::formatter<fem::cli::CliError> : std::formatter<std::string_view>
 {
-    auto format(const fem::cli::CliError& err, std::format_context& ctx) const
-    {
-        return std::formatter<std::string_view>::format(fem::cli::ErrorToString(err), ctx);
-    }
+	auto format(const fem::cli::CliError& err, std::format_context& ctx) const
+	{
+		return std::formatter<std::string_view>::format(err.ToString(), ctx);
+	}
 };
