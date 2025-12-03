@@ -29,7 +29,7 @@ struct MeshProviderError
 	{
 		using enum MeshProviderErrorCode;
 
-		std::string msg = "MeshProviderCode: ";
+		std::string msg = "MeshProviderError: ";
 
 		switch (code)
 		{

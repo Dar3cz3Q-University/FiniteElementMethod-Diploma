@@ -1,5 +1,5 @@
 #pragma once
 
 #include "IntegrationData.h"
-#include "QuadIntegrationData.h"
-#include "LineIntegrationData.h"
+#include "quad/QuadIntegrationData.h"
+#include "line/LineIntegrationData.h"

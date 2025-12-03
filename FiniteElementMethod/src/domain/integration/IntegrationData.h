@@ -1,8 +1,8 @@
 #pragma once
 
 #include "IntegrationSchema.h"
-#include "QuadIntegrationData.h"
-#include "LineIntegrationData.h"
+#include "quad/QuadIntegrationData.h"
+#include "line/LineIntegrationData.h"
 
 namespace fem::domain::integration
 {
