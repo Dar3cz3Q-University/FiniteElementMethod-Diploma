@@ -9,6 +9,8 @@
 #include <unordered_map>
 #include <vector>
 
+// TODO: Use safe getters (std::optional)
+
 namespace fem::mesh::model
 {
 
@@ -18,13 +20,15 @@ public:
 	Mesh() = default;
 	Mesh(size_t numberOfNodes, size_t numberOfCells, size_t numberOfLines);
 
-	inline void AddNode(const Node& node) {
+	inline void AddNode(const Node& node)
+	{
 		std::size_t localID = m_Nodes.size();
 		m_Nodes.push_back(node);
 		m_NodeIndexByGmshId[node.id] = localID;
 	}
 	inline void AddQuad(const Quad& element) { m_Quads.push_back(element); }
-	inline void AddLine(const Line& line) {
+	inline void AddLine(const Line& line)
+	{
 		std::size_t localID = m_Lines.size();
 		m_Lines.push_back(line);
 		m_LineIndexByGmshId[line.id] = localID;
@@ -45,6 +49,11 @@ public:
 	{
 		const auto& index = m_LineIndexByGmshId.at(id);
 		return m_Lines.at(index);
+	}
+
+	inline const std::size_t GetNodeLocalId(std::size_t gmshId) const
+	{
+		return m_NodeIndexByGmshId.at(gmshId);
 	}
 
 	inline const std::size_t GetNodesCount() const

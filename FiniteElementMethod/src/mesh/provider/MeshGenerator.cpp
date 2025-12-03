@@ -14,7 +14,9 @@ std::expected<model::Mesh, MeshProviderError> MeshGenerator::GenerateFromGeo(con
 	auto mshPath = GenerateMshWithGmsh(path);
 
 	if (!mshPath)
+	{
 		return std::unexpected(mshPath.error());
+	}
 
 	return m_Loader.Load(*mshPath);
 }
