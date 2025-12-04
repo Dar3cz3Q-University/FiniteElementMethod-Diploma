@@ -20,4 +20,4 @@ void Log::Init(spdlog::level::level_enum level)
 	LOG_TRACE("Logger initialized");
 }
 
-}
+} // namespace fem::logger
