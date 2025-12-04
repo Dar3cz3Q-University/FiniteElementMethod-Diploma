@@ -50,6 +50,7 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 		}
 	}
 
+	// TODO: Check how boundary conditions are handled
 	for (auto& line : lines)
 	{
 		const auto& res = m_Builder.BuildLineBoundaryMatrices(m_Mesh, line);
@@ -65,13 +66,6 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 
 	out.H.setFromTriplets(tripletsH.begin(), tripletsH.end());
 	out.C.setFromTriplets(tripletsC.begin(), tripletsC.end());
-
-	std::cout << out.H << "\n";
-	std::cout << "---" << "\n";
-	std::cout << out.C << "\n";
-	std::cout << "-----" << "\n";
-	std::cout << out.P << "\n";
-	std::cout << "-----" << "\n";
 
 	return out;
 }
