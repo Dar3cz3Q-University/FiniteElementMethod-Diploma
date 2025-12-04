@@ -4,6 +4,8 @@
 
 #include "logger/logger.h"
 
+#include <format>
+
 namespace fem::domain::integration
 {
 
@@ -17,7 +19,7 @@ std::expected<LineIntegrationData, IntegrationError> BuildLineIntegrationData(In
 		return std::unexpected(
 			IntegrationError{
 				IntegrationErrorCode::IncorrectIntegrationSchema,
-				"Unsupported integration schema: " + std::to_string(nGauss)
+				std::format("Unsupported integration schema: {}", std::to_string(nGauss))
 			}
 		);
 	}
