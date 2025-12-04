@@ -18,6 +18,21 @@ enum class CliErrorCode
 	ParsingError = 0,
 
 	/// <summary>
+	/// A required argument is missing.
+	/// </summary>
+	RequiredArgumentMissing,
+
+	/// <summary>
+	/// Invalid argument value provided.
+	/// </summary>
+	InvalidValue,
+
+	/// <summary>
+	/// File-related error (not found, cannot read, etc.)
+	/// </summary>
+	FileError,
+
+	/// <summary>
 	/// Unspecified or unexpected error type.
 	/// </summary>
 	Unknown
@@ -51,8 +66,23 @@ struct CliError
 
 		switch (code)
 		{
-		case ParsingError: msg += "Parsing error.\n"; break;
-		case Unknown:      msg += "Unknown error.\n"; break;
+		case ParsingError:
+			msg += "Parsing error";
+			break;
+		case RequiredArgumentMissing:
+			msg += "Required argument missing";
+			break;
+		case InvalidValue:
+			msg += "Invalid value";
+			break;
+		case FileError:
+			msg += "File error";
+			break;
+		case Unknown:
+			msg += "Unknown error";
+			break;
+		default:
+			std::unreachable();
 		}
 
 		if (!message.empty())
