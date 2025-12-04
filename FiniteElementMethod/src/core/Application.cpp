@@ -28,7 +28,7 @@ void Application::Initialize()
 	if (m_Initialized)
 		return;
 
-	fem::logger::Log::Init();
+	fem::logger::Log::Init(m_Options.LogLevel);
 	gmsh::initialize();
 
 	size_t nThreads = std::thread::hardware_concurrency();
@@ -59,7 +59,9 @@ void Application::TearDown() noexcept
 
 ExitCode Application::Execute()
 {
-	if (m_Options.ShowHelp) return ExitCode::Success;
+	using enum ExitCode;
+
+	if (m_Options.ShowHelp) return Success;
 
 	Initialize();
 
@@ -67,16 +69,12 @@ ExitCode Application::Execute()
 
 	mesh::provider::MeshProvider provider{};
 
-	// TODO: Remove const path
-	m_Options.MeshInputPath = "D:\\Studia\\Praca inzynierska\\FiniteElementMethod-Diploma\\assets\\mesh\\test.msh";
-
 	const auto& result = provider.LoadMesh(m_Options.MeshInputPath);
 
 	if (!result)
 	{
-		std::cout << result.error().message << "\n";
-		//LOG_ERROR(result.error());
-		return ExitCode::MeshError;
+		LOG_ERROR(result.error().ToString());
+		return MeshError;
 	}
 
 	domain::ElementMatrixBuilder elementBuilder(
@@ -87,7 +85,7 @@ ExitCode Application::Execute()
 
 	const auto& matrices = matrixBuilder.Build();
 
-	return ExitCode::Success;
+	return Success;
 }
 
 }

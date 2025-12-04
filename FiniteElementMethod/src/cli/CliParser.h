@@ -15,21 +15,18 @@ namespace fem::cli
 class CliParser
 {
 public:
-    /// <summary>
-    /// Default constructor for <see cref="CliParser"/>.
-    /// </summary>
-    CliParser() = default;
+	CliParser() = default;
 
-    /// <summary>
-    /// Parses command-line arguments and converts them into <see cref="fem::core::ApplicationOptions"/>.
-    /// </summary>
-    /// <param name="argc">Number of command-line arguments.</param>
-    /// <param name="argv">Array of C-style strings containing the command-line arguments.</param>
-    /// <returns>
-    /// An <c>std::expected</c> containing <see cref="fem::core::ApplicationOptions"/> on success,
-    /// or a <see cref="CliError"/> on failure.
-    /// </returns>
-    static std::expected<fem::core::ApplicationOptions, CliError> Parse(int argc, const char* const* argv);
+	/// <summary>
+	/// Parses command-line arguments and converts them into <see cref="fem::core::ApplicationOptions"/>.
+	/// </summary>
+	/// <param name="argc">Number of command-line arguments.</param>
+	/// <param name="argv">Array of C-style strings containing the command-line arguments.</param>
+	/// <returns>
+	/// An <c>std::expected</c> containing <see cref="fem::core::ApplicationOptions"/> on success,
+	/// or a <see cref="CliError"/> on failure.
+	/// </returns>
+	static std::expected<fem::core::ApplicationOptions, CliError> Parse(int argc, const char* const* argv);
 };
 
 } // namespace fem::cli

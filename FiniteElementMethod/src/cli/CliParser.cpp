@@ -49,7 +49,12 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	}
 	catch (const cxxopts::exceptions::parsing& err)
 	{
-		return std::unexpected(CliError{ CliErrorCode::ParsingError, err.what() });
+		return std::unexpected(
+			CliError{
+				CliErrorCode::ParsingError,
+				err.what()
+			}
+		);
 	}
 
 	fem::core::ApplicationOptions config{};
@@ -71,20 +76,24 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 
 	if (!result.count("input"))
 	{
-		return std::unexpected(CliError{
-			CliErrorCode::RequiredArgumentMissing,
+		return std::unexpected(
+			CliError{
+				CliErrorCode::RequiredArgumentMissing,
 				"Input mesh file is required (use -i or --input)"
-			});
+			}
+		);
 	}
 
 	config.MeshInputPath = result["input"].as<std::string>();
 
 	if (!std::filesystem::exists(config.MeshInputPath))
 	{
-		return std::unexpected(CliError{
-			CliErrorCode::FileError,
+		return std::unexpected(
+			CliError{
+				CliErrorCode::FileError,
 				"Mesh file not found: " + config.MeshInputPath.string()
-			});
+			}
+		);
 	}
 
 	//
@@ -104,10 +113,12 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	auto problemType = solver::ParseProblemType(problemStr);
 	if (!problemType)
 	{
-		return std::unexpected(CliError{
-			CliErrorCode::InvalidValue,
+		return std::unexpected(
+			CliError{
+				CliErrorCode::InvalidValue,
 				std::format("Invalid problem type '{}'", problemStr)
-			});
+			}
+		);
 	}
 	config.ProblemType = *problemType;
 
@@ -119,10 +130,12 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	auto solverType = fem::solver::ParseSolverType(solverStr);
 	if (!solverType)
 	{
-		return std::unexpected(CliError{
-			CliErrorCode::InvalidValue,
+		return std::unexpected(
+			CliError{
+				CliErrorCode::InvalidValue,
 				std::format("Invalid solver type '{}'", solverStr)
-			});
+			}
+		);
 	}
 	config.SolverType = *solverType;
 

@@ -62,24 +62,23 @@ struct CliError
 	{
 		using enum CliErrorCode;
 
-		std::string msg = "CliErrorCode: ";
-
+		std::string_view errorType;
 		switch (code)
 		{
 		case ParsingError:
-			msg += "Parsing error";
+			errorType = "Parsing error";
 			break;
 		case RequiredArgumentMissing:
-			msg += "Required argument missing";
+			errorType = "Required argument missing";
 			break;
 		case InvalidValue:
-			msg += "Invalid value";
+			errorType = "Invalid value";
 			break;
 		case FileError:
-			msg += "File error";
+			errorType = "File error";
 			break;
 		case Unknown:
-			msg += "Unknown error";
+			errorType = "Unknown error";
 			break;
 		default:
 			std::unreachable();
@@ -87,12 +86,10 @@ struct CliError
 
 		if (!message.empty())
 		{
-			msg += "(";
-			msg += message;
-			msg += ")";
+			return std::format("CliErrorCode: {}. Message: {}", errorType, message);
 		}
 
-		return msg;
+		return std::format("CliErrorCode: {}.", errorType);
 	}
 };
 
