@@ -5,31 +5,26 @@
 #include "core/core.h"
 
 #include <expected>
+#include <string>
+
+#include <cxxopts.hpp>
 
 namespace fem::cli
 {
 
-/// <summary>
-/// Parses command-line arguments for the FEM application and produces application options.
-/// </summary>
 class CliParser
 {
 public:
 	CliParser() = default;
 
-	/// <summary>
-	/// Parses command-line arguments and converts them into <see cref="core::ApplicationOptions"/>.
-	/// </summary>
-	/// <param name="argc">Number of command-line arguments.</param>
-	/// <param name="argv">Array of C-style strings containing the command-line arguments.</param>
-	/// <returns>
-	/// An <c>std::expected</c> containing <see cref="core::ApplicationOptions"/> on success,
-	/// or a <see cref="CliError"/> on failure.
-	/// </returns>
 	static std::expected<core::ApplicationOptions, CliError> Parse(int argc, const char* const* argv);
 
 private:
 	static std::string GenerateSolverHelpText();
+
+	static std::expected<void, CliError> ExtractConfigFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
+	static std::expected<void, CliError> ExtractThreadsNumber(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
+	static std::expected<void, CliError> ExtractSolverType(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 };
 
 } // namespace fem::cli

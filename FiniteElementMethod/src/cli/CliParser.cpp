@@ -6,8 +6,8 @@
 #include <exception>
 #include <format>
 #include <iostream>
+#include <print>
 
-#include <cxxopts.hpp>
 #include <fmt/ranges.h>
 
 namespace fem::cli
@@ -19,7 +19,7 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 
 	options.add_options()
 		("h,help", "Show help message")
-		("i,input", "Input mesh file path",
+		("i,input", "Input config file path",
 			cxxopts::value<std::string>())
 		("t,threads", "Number of threads (default: hardware concurrency)",
 			cxxopts::value<std::size_t>())
@@ -31,80 +31,32 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 	{
 		result = options.parse(argc, argv);
 	}
-	catch (const cxxopts::exceptions::parsing& err)
+	catch (const cxxopts::exceptions::exception& e)
 	{
 		return std::unexpected(
 			CliError{
 				CliErrorCode::ParsingError,
-				err.what()
+				e.what()
 			}
 		);
 	}
-
-	fem::core::ApplicationOptions config{};
-
-	//
-	// Help
-	//
 
 	if (result.count("help"))
 	{
 		std::cout << options.help() << std::endl;
-		config.ShowHelp = true;
-		return config;
+		return core::ApplicationOptions{ .showHelp = true };
 	}
 
-	//
-	// Input file
-	//
+	core::ApplicationOptions config{};
 
-	if (!result.count("input"))
-	{
-		return std::unexpected(
-			CliError{
-				CliErrorCode::RequiredArgumentMissing,
-				"Input mesh file is required (use -i or --input)"
-			}
-		);
-	}
+	if (auto res = ExtractConfigFilePath(result, &config); !res)
+		return std::unexpected(res.error());
 
-	config.MeshInputPath = result["input"].as<std::string>();
+	if (auto res = ExtractThreadsNumber(result, &config); !res)
+		return std::unexpected(res.error());
 
-	if (!std::filesystem::exists(config.MeshInputPath))
-	{
-		return std::unexpected(
-			CliError{
-				CliErrorCode::FileError,
-				"Mesh file not found: " + config.MeshInputPath.string()
-			}
-		);
-	}
-
-	//
-	// Threads
-	//
-
-	if (result.count("threads"))
-	{
-		config.NumberOfThreads = result["threads"].as<std::size_t>();
-	}
-
-	//
-	// Solver type
-	//
-
-	std::string solverStr = result["solver"].as<std::string>();
-	auto solverType = fem::solver::linear::ParseSolverType(solverStr);
-	if (!solverType)
-	{
-		return std::unexpected(
-			CliError{
-				CliErrorCode::InvalidValue,
-				std::format("Invalid solver type '{}'", solverStr)
-			}
-		);
-	}
-	config.LinearSolverType = *solverType;
+	if (auto res = ExtractSolverType(result, &config); !res)
+		return std::unexpected(res.error());
 
 	return config;
 }
@@ -117,11 +69,58 @@ std::string CliParser::GenerateSolverHelpText()
 	names.reserve(LINEAR_SOLVERS.size());
 
 	for (const auto& solver : LINEAR_SOLVERS)
-	{
 		names.push_back(solver.name);
-	}
 
-	return std::format("{}", fmt::join(names, ", "));
+	return fmt::format("Linear solver: {}", fmt::join(names, ", "));
+}
+
+std::expected<void, CliError> CliParser::ExtractConfigFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	if (!result.count("input"))
+		return std::unexpected(
+			CliError{
+				CliErrorCode::RequiredArgumentMissing,
+				"Input config file is required (use -i or --input)"
+			}
+		);
+
+	config->configFilePath = result["input"].as<std::string>();
+
+	if (!std::filesystem::exists(config->configFilePath))
+		return std::unexpected(
+			CliError{
+				CliErrorCode::FileError,
+				"Config file not found: " + config->configFilePath.string()
+			}
+		);
+
+	return {};
+}
+
+std::expected<void, CliError> CliParser::ExtractThreadsNumber(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	if (result.count("threads"))
+		config->numberOfThreads = result["threads"].as<std::size_t>();
+
+	return {};
+}
+
+std::expected<void, CliError> CliParser::ExtractSolverType(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	std::string solverStr = result["solver"].as<std::string>();
+	auto solverType = solver::linear::ParseSolverType(solverStr);
+
+	if (!solverType)
+		return std::unexpected(
+			CliError{
+				CliErrorCode::InvalidValue,
+				std::format("Invalid solver type '{}'", solverStr)
+			}
+		);
+
+	config->linearSolverType = *solverType;
+
+	return {};
 }
 
 } // namespace fem::cli
