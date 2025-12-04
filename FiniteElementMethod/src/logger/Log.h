@@ -2,11 +2,13 @@
 
 #include "spdlog/spdlog.h"
 
-namespace fem::logger {
+namespace fem::logger
+{
 
-class Log {
+class Log
+{
 public:
-	static void Init();
+	static void Init(spdlog::level::level_enum level);
 
 	inline static std::shared_ptr<spdlog::logger>& GetLogger() { return s_Logger; }
 

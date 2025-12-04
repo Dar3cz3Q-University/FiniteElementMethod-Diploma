@@ -4,14 +4,16 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
-namespace fem::logger {
+namespace fem::logger
+{
 
 std::shared_ptr<spdlog::logger> Log::s_Logger;
 
-void Log::Init() {
+void Log::Init(spdlog::level::level_enum level)
+{
 	spdlog::set_pattern("[%Y-%m-%d %H:%M:%S.%e] [%^%l%$] [%s]: %v");
 	s_Logger = spdlog::stdout_color_mt("FEM");
-	s_Logger->set_level(spdlog::level::trace);
+	s_Logger->set_level(level);
 
 	// TODO: Add logging to file
 
