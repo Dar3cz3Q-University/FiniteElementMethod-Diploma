@@ -5,8 +5,16 @@
 #include <vector>
 #include <print>
 
-int main(int argc, const char* const* argv) {
-	auto options = fem::cli::CliParser::Parse(argc, argv);
+int main(int argc, const char* const* argv)
+{
+	std::expected<fem::core::ApplicationOptions, fem::cli::CliError> options;
+
+#ifdef _DEBUG
+	auto config = fem::core::debug::GetQuickTest();
+	options = config;
+#else
+	options = fem::cli::CliParser::Parse(argc, argv);
+#endif
 
 	if (!options)
 	{
