@@ -10,40 +10,34 @@ namespace fem::core
 {
 
 /// <summary>
-/// Represents configuration options for the FEM application,
-/// typically populated from command-line arguments.
+/// Represents configuration options for the FEM application
 /// </summary>
 struct ApplicationOptions
 {
 	/// <summary>
-	/// Indicates whether the application should display the help page and exit.
+	/// Indicates whether the application should display the help page and exit
 	/// </summary>
-	bool ShowHelp = false;
+	bool showHelp = false;
 
 	/// <summary>
-	/// Specifies the current spdlog logging level.
+	/// Specifies the current spdlog logging level
 	/// </summary>
-	spdlog::level::level_enum LogLevel = spdlog::level::info;
+	spdlog::level::level_enum logLevel = spdlog::level::info;
 
 	/// <summary>
-	/// Path to the input file containing mesh.
+	/// Path to the domain config file
 	/// </summary>
-	std::filesystem::path MeshInputPath;
+	std::filesystem::path configFilePath;
 
 	/// <summary>
-	/// Number of threads to use for processing.
+	/// Number of threads to use for processing
 	/// </summary>
-	std::optional<std::size_t> NumberOfThreads;
+	std::optional<std::size_t> numberOfThreads;
 
 	/// <summary>
-	/// Type of problem being solved.
+	/// Type of direct solver used for the sparse system
 	/// </summary>
-	solver::ProblemType ProblemType = solver::ProblemType::Steady; // TODO: Move to JSON config later
-
-	/// <summary>
-	/// Type of direct solver used for the sparse system.
-	/// </summary>
-	solver::SolverType SolverType = solver::SolverType::SimplicialLDLT;
+	solver::linear::linearSolverType linearSolverType = solver::linear::linearSolverType::SimplicialLDLT;
 };
 
 } // namespace fem::core
