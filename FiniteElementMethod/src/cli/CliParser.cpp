@@ -4,32 +4,18 @@
 #include "solver/solver.h"
 
 #include <exception>
+#include <format>
 #include <iostream>
 
 #include <cxxopts.hpp>
+#include <fmt/ranges.h>
 
 namespace fem::cli
 {
 
-std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc, const char* const* argv)
+std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, const char* const* argv)
 {
 	cxxopts::Options options("Finite Element Method", "Heat transfer solver using FEM");
-
-	std::string solverHelp = "Linear solver: ";
-	for (size_t i = 0; i < fem::solver::LINEAR_SOLVERS.size(); ++i)
-	{
-		solverHelp += fem::solver::LINEAR_SOLVERS[i].name;
-		if (i < fem::solver::LINEAR_SOLVERS.size() - 1)
-			solverHelp += ", ";
-	}
-
-	std::string problemHelp = "Problem type: ";
-	for (size_t i = 0; i < fem::solver::PROBLEM_TYPES.size(); ++i)
-	{
-		problemHelp += fem::solver::PROBLEM_TYPES[i].name;
-		if (i < fem::solver::PROBLEM_TYPES.size() - 1)
-			problemHelp += ", ";
-	}
 
 	options.add_options()
 		("h,help", "Show help message")
@@ -37,9 +23,7 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 			cxxopts::value<std::string>())
 		("t,threads", "Number of threads (default: hardware concurrency)",
 			cxxopts::value<std::size_t>())
-		("p,problem", problemHelp,
-			cxxopts::value<std::string>()->default_value("steady"))
-		("s,solver", solverHelp,
+		("s,solver", GenerateSolverHelpText(),
 			cxxopts::value<std::string>()->default_value("cholesky"));
 
 	cxxopts::ParseResult result;
@@ -106,28 +90,11 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 	}
 
 	//
-	// Problem type
-	//
-
-	std::string problemStr = result["problem"].as<std::string>();
-	auto problemType = solver::ParseProblemType(problemStr);
-	if (!problemType)
-	{
-		return std::unexpected(
-			CliError{
-				CliErrorCode::InvalidValue,
-				std::format("Invalid problem type '{}'", problemStr)
-			}
-		);
-	}
-	config.ProblemType = *problemType;
-
-	//
 	// Solver type
 	//
 
 	std::string solverStr = result["solver"].as<std::string>();
-	auto solverType = fem::solver::ParseSolverType(solverStr);
+	auto solverType = fem::solver::linear::ParseSolverType(solverStr);
 	if (!solverType)
 	{
 		return std::unexpected(
@@ -137,9 +104,24 @@ std::expected<fem::core::ApplicationOptions, CliError> CliParser::Parse(int argc
 			}
 		);
 	}
-	config.SolverType = *solverType;
+	config.LinearSolverType = *solverType;
 
 	return config;
+}
+
+std::string CliParser::GenerateSolverHelpText()
+{
+	using namespace solver::linear;
+
+	std::vector<std::string_view> names;
+	names.reserve(LINEAR_SOLVERS.size());
+
+	for (const auto& solver : LINEAR_SOLVERS)
+	{
+		names.push_back(solver.name);
+	}
+
+	return std::format("{}", fmt::join(names, ", "));
 }
 
 } // namespace fem::cli

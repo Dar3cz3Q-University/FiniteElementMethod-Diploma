@@ -18,15 +18,18 @@ public:
 	CliParser() = default;
 
 	/// <summary>
-	/// Parses command-line arguments and converts them into <see cref="fem::core::ApplicationOptions"/>.
+	/// Parses command-line arguments and converts them into <see cref="core::ApplicationOptions"/>.
 	/// </summary>
 	/// <param name="argc">Number of command-line arguments.</param>
 	/// <param name="argv">Array of C-style strings containing the command-line arguments.</param>
 	/// <returns>
-	/// An <c>std::expected</c> containing <see cref="fem::core::ApplicationOptions"/> on success,
+	/// An <c>std::expected</c> containing <see cref="core::ApplicationOptions"/> on success,
 	/// or a <see cref="CliError"/> on failure.
 	/// </returns>
-	static std::expected<fem::core::ApplicationOptions, CliError> Parse(int argc, const char* const* argv);
+	static std::expected<core::ApplicationOptions, CliError> Parse(int argc, const char* const* argv);
+
+private:
+	static std::string GenerateSolverHelpText();
 };
 
 } // namespace fem::cli
