@@ -1,0 +1,18 @@
+{
+  "mesh_path": "..\\assets\\mesh\\small.msh",
+  "problem": {
+    "type": "steady"
+  },
+  "material": {
+    "name": "Steel",
+    "conductivity": 25,
+    "density": 7800,
+    "specific_heat": 700
+  },
+  "boundary_condition": {
+    "physical_group_name": "test",
+    "type": "convection",
+    "alpha": 300,
+    "ambient_temperature": 1200
+  }
+}

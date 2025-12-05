@@ -10,7 +10,7 @@ int main(int argc, const char* const* argv)
 	std::expected<fem::core::ApplicationOptions, fem::cli::CliError> options;
 
 #ifdef _DEBUG
-	auto config = fem::core::debug::GetTransientTest();
+	auto config = fem::core::debug::GetLargeTest();
 	options = config;
 #else
 	options = fem::cli::CliParser::Parse(argc, argv);

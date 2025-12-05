@@ -1,0 +1,23 @@
+{
+  "mesh_path": "..\\assets\\mesh\\small.msh",
+  "problem": {
+    "type": "transient",
+    "total_time": 5000,
+    "time_step": 5,
+    "initial_conditions": {
+      "uniform_temperature": 100
+    }
+  },
+  "material": {
+    "name": "Steel",
+    "conductivity": 25,
+    "density": 7800,
+    "specific_heat": 700
+  },
+  "boundary_condition": {
+    "physical_group_name": "test",
+    "type": "convection",
+    "alpha": 300,
+    "ambient_temperature": 1200
+  }
+}

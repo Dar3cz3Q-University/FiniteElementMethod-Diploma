@@ -7,10 +7,10 @@
 namespace fem::core::debug
 {
 
-inline ApplicationOptions GetQuickTest()
+inline ApplicationOptions GetSteadyTest()
 {
 	ApplicationOptions opts;
-	opts.configFilePath = "..\\assets\\config\\quick.json";
+	opts.configFilePath = "..\\assets\\config\\steady.json";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	return opts;
 }
@@ -26,8 +26,8 @@ inline ApplicationOptions GetTransientTest()
 inline ApplicationOptions GetLargeTest()
 {
 	ApplicationOptions opts;
-	opts.configFilePath = "..\\assets\\mesh\\test.msh";
-	opts.LinearSolverType = solver::linear::LinearSolverType::SparseQR;
+	opts.configFilePath = "..\\assets\\config\\large.json";
+	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	opts.numberOfThreads = 8;
 	return opts;
 }
