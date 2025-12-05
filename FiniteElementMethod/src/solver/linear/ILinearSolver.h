@@ -33,4 +33,4 @@ public:
 	virtual std::string GetName() const = 0;
 };
 
-} // namespace fem::solver
+} // namespace fem::solver::linear
