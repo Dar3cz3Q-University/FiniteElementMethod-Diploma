@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <optional>
 #include <ostream>
+#include <string>
 
 #include "solver/solver.h"
 #include "logger/logger.h"
@@ -46,7 +47,7 @@ struct ApplicationOptions
 
 		oss << "Application Configuration:\n";
 		oss << "  Show Help: " << (showHelp ? "Yes" : "No") << "\n";
-		oss << "  Log Level: " << logLevel << "\n";
+		oss << "  Log Level: " << spdlog::level::to_string_view(logLevel).data() << "\n";
 		oss << "  Config File: " << (configFilePath.empty() ? "<not set>" : configFilePath.string()) << "\n";
 		oss << "  Number of Threads: " << (numberOfThreads.has_value() ? std::to_string(numberOfThreads.value()) : "auto") << "\n";
 		oss << "  Linear Solver: " << solver::linear::LinearSolverTypeToString(LinearSolverType);
