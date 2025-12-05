@@ -3,6 +3,7 @@
 #include "math/math.h"
 #include "integration/integration.h"
 #include "logger/logger.h"
+#include "utils/utils.h"
 
 #include <iostream>
 
@@ -99,7 +100,7 @@ std::expected<ElementMatrices, int> ElementMatrixBuilder::BuildQuadMatrices(cons
 			}
 		}
 	}
-	
+
 	return out;
 }
 
@@ -137,8 +138,9 @@ std::expected<BoundaryMatrices, int> ElementMatrixBuilder::BuildLineBoundaryMatr
 	LOG_TRACE("Using integration schema: Gauss{}, nPoints={}",
 		std::to_underlying(schema), lineData.nPoints);
 
-	double alpha = m_BoundaryCondition.alpha;
-	double ambientTemperature = m_BoundaryCondition.ambientTemperature;
+	// TODO: Check if values are present
+	double alpha = m_BoundaryCondition.alpha.value();
+	double ambientTemperature = m_BoundaryCondition.ambientTemperature.value();
 
 	LOG_TRACE("Convection BC: alpha={:.2f} W/(m^2*K), T_ambient={:.2f} K",
 		alpha, ambientTemperature);

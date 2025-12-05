@@ -1,9 +1,9 @@
 #pragma once
 
 #include "BoundaryMatrices.h"
-#include "BoundaryCondition.h"
+#include "model/BoundaryCondition.h"
 #include "ElementMatrices.h"
-#include "Material.h"
+#include "model/Material.h"
 
 #include "logger/logger.h"
 #include "mesh/mesh.h"
@@ -16,7 +16,7 @@ namespace fem::domain
 class ElementMatrixBuilder
 {
 public:
-	ElementMatrixBuilder(const Material& material, const BoundaryCondition& bc) : m_Material(material), m_BoundaryCondition(bc)
+	ElementMatrixBuilder(const model::Material& material, const model::BoundaryCondition& bc) : m_Material(material), m_BoundaryCondition(bc)
 	{
 		LOG_INFO("Initialized with material = {}", material.name);
 		LOG_INFO("Initialized with boundary condition group = {}", bc.physicalGroupName);
@@ -32,8 +32,8 @@ public:
 		const mesh::model::Line& line) const;
 
 private:
-	const Material m_Material;
-	const BoundaryCondition m_BoundaryCondition;
+	const model::Material m_Material;
+	const model::BoundaryCondition m_BoundaryCondition;
 };
 
 }
