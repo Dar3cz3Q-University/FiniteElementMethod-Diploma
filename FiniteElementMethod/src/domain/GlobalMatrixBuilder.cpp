@@ -28,8 +28,8 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 	tripletsC.reserve(numberOfElements * 16);
 
 	std::atomic<int> processedElements{ 0 };
+	std::atomic<int> lastLoggedPercent{ 0 };
 	const int totalElements = numberOfElements;
-	const int logStep = std::max(1, totalElements / 10);
 
 #pragma omp parallel
 	{
@@ -47,12 +47,15 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 			AssembleQuadElement(element, *res, localTripletsH, localTripletsC, localP);
 
 			int done = ++processedElements;
-			if (done % logStep == 0 || done == totalElements)
+			int currentPercent = (done * 100) / totalElements;
+			int roundedPercent = (currentPercent / 10) * 10;
+
+			if (roundedPercent > lastLoggedPercent.load(std::memory_order_relaxed))
 			{
-				if (omp_get_thread_num() == 0)
+				int expected = roundedPercent - 10;
+				if (lastLoggedPercent.compare_exchange_strong(expected, roundedPercent))
 				{
-					double pct = 100.0 * static_cast<double>(done) / static_cast<double>(totalElements);
-					LOG_INFO("Assembling elements... {:.1f}% ({}/{})", pct, done, totalElements);
+					LOG_INFO("Assembling elements... {}% ({}/{})", roundedPercent, done, totalElements);
 				}
 			}
 		}
@@ -66,6 +69,7 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 	}
 
 	// TODO: Check how boundary conditions are handled
+	// TODO: Display progress for lines
 	for (auto& line : lines)
 	{
 		const auto& res = m_Builder.BuildLineBoundaryMatrices(m_Mesh, line);
