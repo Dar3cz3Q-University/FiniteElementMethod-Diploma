@@ -38,11 +38,6 @@ struct ProblemConfig
 	/// Boundary condition.
 	/// </summary>
 	domain::model::BoundaryCondition boundaryCondition; // TODO: Support multiple BCs
-
-	/// <summary>
-	/// Uniform initial temperature.
-	/// </summary>
-	double uniformInitialTemperature; // TODO: Think to use Kelvin or Celsius
 };
 
 } // namespace fem::config

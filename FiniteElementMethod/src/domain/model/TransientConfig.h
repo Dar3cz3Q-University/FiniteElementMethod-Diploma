@@ -9,7 +9,7 @@ struct TransientConfig
 {
 	double totalTime;
 	double timeStep;
-	Vec initialConditions;
+	double initialTemperature; // TODO: Change to vector of initial conditions
 };
 
 } // namespace fem::domain::model

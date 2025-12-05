@@ -18,8 +18,8 @@ inline ApplicationOptions GetQuickTest()
 inline ApplicationOptions GetTransientTest()
 {
 	ApplicationOptions opts;
-	opts.configFilePath = "..\\assets\\mesh\\test.msh";
-	opts.LinearSolverType = solver::linear::LinearSolverType::SparseLU;
+	opts.configFilePath = "..\\assets\\config\\transient.json";
+	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	return opts;
 }
 

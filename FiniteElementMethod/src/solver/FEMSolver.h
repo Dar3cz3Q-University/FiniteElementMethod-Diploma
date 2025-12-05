@@ -8,6 +8,7 @@
 #include "linear/linear.h"
 #include "math/math.h"
 
+// TODO: Add FEMSolver Error with more information
 namespace fem::solver
 {
 

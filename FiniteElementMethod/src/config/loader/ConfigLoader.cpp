@@ -64,9 +64,6 @@ std::expected<ProblemConfig, ConfigLoaderError> ConfigLoader::Parse(const std::s
 
 		if (auto res = ExtractBoundaryCondition(json, &config); !res)
 			return std::unexpected(res.error());
-
-		if (auto res = ExtractInitialConditions(json, &config); !res)
-			return std::unexpected(res.error());
 	}
 	catch (const nlohmann::json::exception& e)
 	{
@@ -131,8 +128,13 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractTransientParams(cons
 	if (!timeStep)
 		return std::unexpected(timeStep.error());
 
+	auto initialTemperature = GetRequiredField<double>(json, "/problem/initial_conditions/uniform_temperature");
+	if (!initialTemperature)
+		return std::unexpected(initialTemperature.error());
+
 	auto totalTimeValue = *totalTime;
 	auto timeStepValue = *timeStep;
+	auto initialTemperatureValue = *initialTemperature;
 
 	// TODO: Create validator
 	if (totalTimeValue <= 0.0 || timeStepValue <= 0.0)
@@ -143,7 +145,11 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractTransientParams(cons
 			}
 		);
 
-	config->transientConfig = { totalTimeValue, timeStepValue };
+	config->transientConfig = domain::model::TransientConfig{
+		.totalTime = totalTimeValue,
+		.timeStep = timeStepValue,
+		.initialTemperature = initialTemperatureValue,
+	};
 
 	return {};
 }
@@ -249,17 +255,6 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractBoundaryCondition(co
 	// TODO: Create validator
 
 	config->boundaryCondition = bc;
-
-	return {};
-}
-
-std::expected<void, ConfigLoaderError> ConfigLoader::ExtractInitialConditions(const nlohmann::json& json, ProblemConfig* config)
-{
-	auto uniformTemperature = GetRequiredField<double>(json, "/initial_conditions/uniform_temperature");
-	if (!uniformTemperature)
-		return std::unexpected(uniformTemperature.error());
-
-	config->uniformInitialTemperature = *uniformTemperature;
 
 	return {};
 }

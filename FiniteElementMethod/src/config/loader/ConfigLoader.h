@@ -32,7 +32,6 @@ private:
 	static std::expected<void, ConfigLoaderError> ExtractTransientParams(const nlohmann::json& json, ProblemConfig* config);
 	static std::expected<void, ConfigLoaderError> ExtractMaterial(const nlohmann::json& json, ProblemConfig* config);
 	static std::expected<void, ConfigLoaderError> ExtractBoundaryCondition(const nlohmann::json& json, ProblemConfig* config);
-	static std::expected<void, ConfigLoaderError> ExtractInitialConditions(const nlohmann::json& json, ProblemConfig* config);
 
 private:
 	template<typename T>
