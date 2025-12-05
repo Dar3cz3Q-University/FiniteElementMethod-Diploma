@@ -1,5 +1,8 @@
 #pragma once
 
-#include "ProblemType.h"
+#include "FEMSolver.h"
 #include "SolverError.h"
-#include "SolverType.h"
+
+#include "linear/LinearSolverType.h"
+#include "linear/LinearSolverFactory.h"
+#include "linear/LinearSolverStats.h"

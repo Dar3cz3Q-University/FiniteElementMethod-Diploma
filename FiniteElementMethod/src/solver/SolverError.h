@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string>
+
 namespace fem::solver
 {
 
@@ -46,4 +48,4 @@ struct SolverError
 	}
 };
 
-}
+} // namespace fem::solver
