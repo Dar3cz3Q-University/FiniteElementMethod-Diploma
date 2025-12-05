@@ -156,10 +156,19 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 
 		if (step % 100 == 0 || step == numSteps - 1)
 		{
-			LOG_INFO("Step {}/{} (t={:.3f}s), solve: {:.2f}ms, residual: {:.2e}, T_min/max: {:.2f}/{:.2f} K",
-				step + 1, numSteps, currentTime + dt,
-				stats.elapsedTimeMs, stats.residualNorm,
-				T_current.minCoeff(), T_current.maxCoeff());
+			const double pct = 100.0 * static_cast<double>(step + 1) / static_cast<double>(numSteps);
+			LOG_INFO("Solving... {:.1f}% ({}/{})", pct, step + 1, numSteps);
+
+			LOG_TRACE(
+				"Step {}/{} (t={:.3f}s), solve: {:.2f}ms, residual: {:.2e}, T_min/max: {:.2f}/{:.2f} K",
+				step + 1,
+				numSteps,
+				currentTime + dt,
+				stats.elapsedTimeMs,
+				stats.residualNorm,
+				T_current.minCoeff(),
+				T_current.maxCoeff()
+			);
 		}
 	}
 

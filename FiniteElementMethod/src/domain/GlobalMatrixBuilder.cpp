@@ -2,6 +2,7 @@
 
 #include "logger/logger.h"
 
+#include <atomic>
 #include <iostream>
 #include <vector>
 #include <omp.h>
@@ -26,6 +27,10 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 	tripletsH.reserve(numberOfElements * 16); // TODO: Move number to variable
 	tripletsC.reserve(numberOfElements * 16);
 
+	std::atomic<int> processedElements{ 0 };
+	const int totalElements = numberOfElements;
+	const int logStep = std::max(1, totalElements / 10);
+
 #pragma omp parallel
 	{
 		TripletsVector localTripletsH;
@@ -40,6 +45,16 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 			if (!res) continue; // TODO: Handle error
 
 			AssembleQuadElement(element, *res, localTripletsH, localTripletsC, localP);
+
+			int done = ++processedElements;
+			if (done % logStep == 0 || done == totalElements)
+			{
+				if (omp_get_thread_num() == 0)
+				{
+					double pct = 100.0 * static_cast<double>(done) / static_cast<double>(totalElements);
+					LOG_INFO("Assembling elements... {:.1f}% ({}/{})", pct, done, totalElements);
+				}
+			}
 		}
 
 #pragma omp critical

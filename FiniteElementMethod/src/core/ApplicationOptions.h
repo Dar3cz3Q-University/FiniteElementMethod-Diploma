@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <optional>
+#include <ostream>
 
 #include "solver/solver.h"
 #include "logger/logger.h"
@@ -38,6 +39,20 @@ struct ApplicationOptions
 	/// Type of direct solver used for the sparse system
 	/// </summary>
 	solver::linear::LinearSolverType LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
+
+	std::string ToString() const
+	{
+		std::ostringstream oss;
+
+		oss << "Application Configuration:\n";
+		oss << "  Show Help: " << (showHelp ? "Yes" : "No") << "\n";
+		oss << "  Log Level: " << logLevel << "\n";
+		oss << "  Config File: " << (configFilePath.empty() ? "<not set>" : configFilePath.string()) << "\n";
+		oss << "  Number of Threads: " << (numberOfThreads.has_value() ? std::to_string(numberOfThreads.value()) : "auto") << "\n";
+		oss << "  Linear Solver: " << solver::linear::LinearSolverTypeToString(LinearSolverType);
+
+		return oss.str();
+	}
 };
 
 } // namespace fem::core

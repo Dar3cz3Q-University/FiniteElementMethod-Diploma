@@ -12,6 +12,7 @@ inline ApplicationOptions GetSteadyTest()
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\steady.json";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
+	opts.logLevel = spdlog::level::trace;
 	return opts;
 }
 
@@ -20,6 +21,7 @@ inline ApplicationOptions GetTransientTest()
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\transient.json";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
+	opts.logLevel = spdlog::level::info;
 	return opts;
 }
 
@@ -28,7 +30,7 @@ inline ApplicationOptions GetLargeTest()
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\large.json";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
-	opts.numberOfThreads = 8;
+	opts.numberOfThreads = 16;
 	return opts;
 }
 

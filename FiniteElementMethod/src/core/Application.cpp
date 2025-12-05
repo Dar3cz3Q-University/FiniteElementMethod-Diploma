@@ -41,6 +41,7 @@ void Application::Initialize()
 	omp_set_num_threads(nThreads);
 
 	LOG_INFO("Initialization completed");
+	LOG_INFO(m_Options.ToString());
 
 	m_Initialized = true;
 }
@@ -66,6 +67,7 @@ ExitCode Application::Execute()
 	Initialize();
 
 	LOG_INFO("Application running...");
+	LOG_INFO("Using {} threads", omp_get_max_threads());
 
 	const auto& parsedConfig = config::loader::ConfigLoader::LoadFromFile(m_Options.configFilePath);
 
