@@ -118,7 +118,7 @@ std::expected<void, CliError> CliParser::ExtractSolverType(const cxxopts::ParseR
 			}
 		);
 
-	config->linearSolverType = *solverType;
+	config->LinearSolverType = *solverType;
 
 	return {};
 }

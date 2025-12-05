@@ -19,7 +19,7 @@ std::expected<ProblemConfig, ConfigLoaderError> ConfigLoader::LoadFromFile(const
 	if (!readData)
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::FileError,
+				ConfigLoaderErrorCode::FileError,
 				std::format("Failed to read config file: {}", readData.error())
 			}
 		);
@@ -39,7 +39,7 @@ std::expected<ProblemConfig, ConfigLoaderError> ConfigLoader::Parse(const std::s
 	{
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::ParserError,
+				ConfigLoaderErrorCode::ParserError,
 				std::format("JSON parsing failed: {}", e.what())
 			}
 		);
@@ -72,7 +72,7 @@ std::expected<ProblemConfig, ConfigLoaderError> ConfigLoader::Parse(const std::s
 	{
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::ParserError,
+				ConfigLoaderErrorCode::ParserError,
 				std::format("Error parsing config: {}", e.what())
 			}
 		);
@@ -81,7 +81,7 @@ std::expected<ProblemConfig, ConfigLoaderError> ConfigLoader::Parse(const std::s
 	{
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::Unknown,
+				ConfigLoaderErrorCode::Unknown,
 				std::format("Unexpected error: {}", e.what())
 			}
 		);
@@ -111,7 +111,7 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractProblemType(const nl
 	if (!problemType)
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::InvalidValue,
+				ConfigLoaderErrorCode::InvalidValue,
 				std::format("Invalid problem type: {}", *problemTypeStr)
 			}
 		);
@@ -138,7 +138,7 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractTransientParams(cons
 	if (totalTimeValue <= 0.0 || timeStepValue <= 0.0)
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::InvalidValue,
+				ConfigLoaderErrorCode::InvalidValue,
 				"Time parameters must be positive"
 			}
 		);
@@ -174,7 +174,7 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractMaterial(const nlohm
 	if (conductivityValue <= 0.0 || densityValue <= 0.0 || specificHeatValue <= 0.0)
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::InvalidValue,
+				ConfigLoaderErrorCode::InvalidValue,
 				"Material properties must be positive"
 			}
 		);
@@ -204,7 +204,7 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractBoundaryCondition(co
 	if (!type)
 		return std::unexpected(
 			ConfigLoaderError{
-				ConfigLoaderErrorType::InvalidValue,
+				ConfigLoaderErrorCode::InvalidValue,
 				std::format("Invalid boundary condition type: {}", *typeStr)
 			}
 		);

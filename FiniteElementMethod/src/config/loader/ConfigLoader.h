@@ -47,7 +47,7 @@ private:
 		{
 			return std::unexpected(
 				ConfigLoaderError{
-					ConfigLoaderErrorType::MissingRequiredField,
+					ConfigLoaderErrorCode::MissingRequiredField,
 					std::format("Missing required field: '{}'", path)
 				}
 			);
@@ -56,7 +56,7 @@ private:
 		{
 			return std::unexpected(
 				ConfigLoaderError{
-					ConfigLoaderErrorType::InvalidValue,
+					ConfigLoaderErrorCode::InvalidValue,
 					std::format("Invalid value for field '{}': {}", path, e.what())
 				}
 			);

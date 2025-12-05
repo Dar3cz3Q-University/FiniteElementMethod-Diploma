@@ -2,5 +2,4 @@
 
 #include "ProblemConfig.h"
 
-#include "loader/ConfigLoader.h"
-#include "loader/ConfigLoaderError.h"
+#include "loader/loader.h"

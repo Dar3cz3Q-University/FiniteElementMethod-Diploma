@@ -9,7 +9,7 @@ namespace fem::config::loader
 /// <summary>
 /// Configuration loading error types.
 /// </summary>
-enum class ConfigLoaderErrorType : int
+enum class ConfigLoaderErrorCode : int
 {
 	/// <summary>
 	/// File-related error (not found, cannot read, etc.)
@@ -45,7 +45,7 @@ struct ConfigLoaderError
 	/// <summary>
 	/// Error type code
 	/// </summary>
-	ConfigLoaderErrorType code;
+	ConfigLoaderErrorCode code;
 
 	/// <summary>
 	/// Detailed error description
@@ -57,7 +57,7 @@ struct ConfigLoaderError
 	/// </summary>
 	std::string ToString() const
 	{
-		using enum ConfigLoaderErrorType;
+		using enum ConfigLoaderErrorCode;
 
 		std::string_view errorType;
 		switch (code)
