@@ -29,7 +29,7 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 
 	std::atomic<int> processedElements{ 0 };
 	std::atomic<int> lastLoggedPercent{ 0 };
-	const int totalElements = numberOfElements;
+	const int totalElements = static_cast<int>(numberOfElements);
 
 #pragma omp parallel
 	{
