@@ -4,6 +4,7 @@
 #include "domain/domain.h"
 #include "logger/logger.h"
 #include "mesh/mesh.h"
+#include "solver/solver.h"
 
 #include <iostream>
 #include <thread>
@@ -100,7 +101,28 @@ ExitCode Application::Execute()
 		return DomainError;
 	}
 
-	// TODO: Run solver
+	const auto& H = matrices.value().H;
+	const auto& C = matrices.value().C;
+	const auto& P = matrices.value().P;
+
+	auto solverConfig = solver::FEMSolverConfig{
+		.problemType = config.problemType,
+		.linearSolver = m_Options.LinearSolverType,
+	};
+
+	if (config.problemType == domain::model::ProblemType::Transient)
+	{
+		solverConfig.transientConfig = config.transientConfig;
+	}
+
+	auto solver = solver::FEMSolver();
+	auto solution = solver.Solve(H, C, P, solverConfig);
+
+	if (!solution)
+	{
+		LOG_ERROR(solution.error().ToString());
+		return SolverError;
+	}
 
 	return Success;
 }

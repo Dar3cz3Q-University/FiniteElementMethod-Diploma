@@ -37,7 +37,7 @@ struct ApplicationOptions
 	/// <summary>
 	/// Type of direct solver used for the sparse system
 	/// </summary>
-	solver::linear::linearSolverType linearSolverType = solver::linear::linearSolverType::SimplicialLDLT;
+	solver::linear::LinearSolverType LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 };
 
 } // namespace fem::core

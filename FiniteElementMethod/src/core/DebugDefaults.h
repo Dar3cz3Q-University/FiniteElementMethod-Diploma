@@ -10,28 +10,25 @@ namespace fem::core::debug
 inline ApplicationOptions GetQuickTest()
 {
 	ApplicationOptions opts;
-	opts.MeshInputPath = "..\\assets\\mesh\\test.msh";
-	opts.ProblemType = solver::ProblemType::Steady;
-	opts.SolverType = solver::SolverType::SimplicialLDLT;
+	opts.configFilePath = "..\\assets\\config\\quick.json";
+	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	return opts;
 }
 
 inline ApplicationOptions GetTransientTest()
 {
 	ApplicationOptions opts;
-	opts.MeshInputPath = "..\\assets\\mesh\\test.msh";
-	opts.ProblemType = solver::ProblemType::Transient;
-	opts.SolverType = solver::SolverType::SparseLU;
+	opts.configFilePath = "..\\assets\\mesh\\test.msh";
+	opts.LinearSolverType = solver::linear::LinearSolverType::SparseLU;
 	return opts;
 }
 
 inline ApplicationOptions GetLargeTest()
 {
 	ApplicationOptions opts;
-	opts.MeshInputPath = "..\\assets\\mesh\\test.msh";
-	opts.ProblemType = solver::ProblemType::Steady;
-	opts.SolverType = solver::SolverType::SparseQR;
-	opts.NumberOfThreads = 8;
+	opts.configFilePath = "..\\assets\\mesh\\test.msh";
+	opts.LinearSolverType = solver::linear::LinearSolverType::SparseQR;
+	opts.numberOfThreads = 8;
 	return opts;
 }
 
