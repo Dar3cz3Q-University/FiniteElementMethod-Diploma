@@ -2,7 +2,7 @@
 
 #include <chrono>
 
-namespace fem::metrics
+namespace fem
 {
 
 using TimePoint = std::chrono::high_resolution_clock::time_point;

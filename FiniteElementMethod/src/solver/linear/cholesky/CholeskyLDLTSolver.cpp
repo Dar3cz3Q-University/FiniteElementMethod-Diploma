@@ -2,8 +2,7 @@
 
 #include "config/config.h"
 #include "metrics/metrics.h"
-
-#include <chrono>
+#include "utils/utils.h"
 
 #include <Eigen/SparseCholesky>
 
@@ -38,13 +37,13 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 
 	size_t memBefore = metrics::MemoryMonitor::GetCurrentUsage();
 
-	auto factorStart = metrics::Now();
+	auto factorStart = Now();
 
 	Eigen::SimplicialLDLT<SpMat, Eigen::Lower, config::DefaultOrderingType> solver;
 	solver.compute(A);
 
-	auto factorEnd = metrics::Now();
-	stats.factorizationTimeMs = metrics::ElapsedMs(factorStart, factorEnd);
+	auto factorEnd = Now();
+	stats.factorizationTimeMs = ElapsedMs(factorStart, factorEnd);
 
 	// TODO: Map Eigen errors to SolverError more precisely
 	if (solver.info() != Eigen::Success)
@@ -57,12 +56,12 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 		);
 	}
 
-	auto solveStart = metrics::Now();
+	auto solveStart = Now();
 
 	Vec x = solver.solve(b);
 
-	auto solveEnd = metrics::Now();
-	stats.solveTimeMs = metrics::ElapsedMs(solveStart, solveEnd);
+	auto solveEnd = Now();
+	stats.solveTimeMs = ElapsedMs(solveStart, solveEnd);
 
 	// TODO: Map Eigen errors to SolverError more precisely
 	if (solver.info() != Eigen::Success)

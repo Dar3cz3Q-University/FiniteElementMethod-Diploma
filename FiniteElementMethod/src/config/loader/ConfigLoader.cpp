@@ -128,12 +128,17 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractTransientParams(cons
 	if (!timeStep)
 		return std::unexpected(timeStep.error());
 
+	auto saveHistory = GetRequiredField<bool>(json, "/problem/save_history");
+	if (!saveHistory)
+		return std::unexpected(saveHistory.error());
+
 	auto initialTemperature = GetRequiredField<double>(json, "/problem/initial_conditions/uniform_temperature");
 	if (!initialTemperature)
 		return std::unexpected(initialTemperature.error());
 
 	auto totalTimeValue = *totalTime;
 	auto timeStepValue = *timeStep;
+	auto saveHistoryValue = *saveHistory;
 	auto initialTemperatureValue = *initialTemperature;
 
 	// TODO: Create validator
@@ -145,9 +150,31 @@ std::expected<void, ConfigLoaderError> ConfigLoader::ExtractTransientParams(cons
 			}
 		);
 
+	std::optional<size_t> saveStrideOpt = std::nullopt;
+	if (saveHistoryValue)
+	{
+		auto saveStride = GetRequiredField<size_t>(json, "/problem/save_stride");
+		if (!saveStride)
+			return std::unexpected(saveStride.error());
+
+		auto saveStrideValue = *saveStride;
+
+		if (saveStrideValue == 0)
+			return std::unexpected(
+				ConfigLoaderError{
+					ConfigLoaderErrorCode::InvalidValue,
+					"Stride value must be positive"
+				}
+			);
+
+		saveStrideOpt = saveStrideValue;
+	}
+
 	config->transientConfig = domain::model::TransientConfig{
 		.totalTime = totalTimeValue,
 		.timeStep = timeStepValue,
+		.saveHistory = saveHistoryValue,
+		.saveStride = saveStrideOpt,
 		.initialTemperature = initialTemperatureValue,
 	};
 
