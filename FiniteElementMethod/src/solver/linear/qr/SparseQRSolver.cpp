@@ -8,10 +8,7 @@
 namespace fem::solver::linear
 {
 
-std::expected<Vec, SolverError> SparseQRSolver::Solve(
-	const SpMat& A,
-	const Vec& b,
-	LinearSolverStats* stats)
+std::expected<LinearSolverResult, SolverError> SparseQRSolver::Solve(const SpMat& A, const Vec& b)
 {
 	if (A.rows() != A.cols())
 	{
@@ -33,13 +30,19 @@ std::expected<Vec, SolverError> SparseQRSolver::Solve(
 		);
 	}
 
+	LinearSolverStats stats;
+	stats.matrixSize = A.rows();
+	stats.matrixNonZeros = A.nonZeros();
+
 	size_t memBefore = metrics::MemoryMonitor::GetCurrentUsage();
-	auto factorStart = std::chrono::high_resolution_clock::now();
+
+	auto factorStart = metrics::Now();
 
 	Eigen::SparseQR<SpMat, config::DefaultOrderingType> solver;
 	solver.compute(A);
 
-	auto factorEnd = std::chrono::high_resolution_clock::now();
+	auto factorEnd = metrics::Now();
+	stats.factorizationTimeMs = metrics::ElapsedMs(factorStart, factorEnd);
 
 	// TODO: Map Eigen errors to SolverError more precisely
 	if (solver.info() != Eigen::Success)
@@ -52,11 +55,12 @@ std::expected<Vec, SolverError> SparseQRSolver::Solve(
 		);
 	}
 
-	auto solveStart = std::chrono::high_resolution_clock::now();
+	auto solveStart = metrics::Now();
 
 	Vec x = solver.solve(b);
 
-	auto solveEnd = std::chrono::high_resolution_clock::now();
+	auto solveEnd = metrics::Now();
+	stats.solveTimeMs = metrics::ElapsedMs(solveStart, solveEnd);
 
 	// TODO: Map Eigen errors to SolverError more precisely
 	if (solver.info() != Eigen::Success)
@@ -70,21 +74,13 @@ std::expected<Vec, SolverError> SparseQRSolver::Solve(
 	}
 
 	size_t memAfter = metrics::MemoryMonitor::GetCurrentUsage();
-	size_t peakMem = metrics::MemoryMonitor::GetPeakUsage();
+	stats.memoryUsedBytes = memAfter - memBefore;
+	stats.peakMemoryBytes = metrics::MemoryMonitor::GetPeakUsage();
 
-	if (stats)
-	{
-		stats->factorizationTimeMs = std::chrono::duration<double, std::milli>(factorEnd - factorStart).count();
-		stats->solveTimeMs = std::chrono::duration<double, std::milli>(solveEnd - solveStart).count();
-		stats->elapsedTimeMs = stats->factorizationTimeMs + stats->solveTimeMs;
-
-		stats->residualNorm = (A * x - b).norm();
-
-		stats->memoryUsedBytes = memAfter - memBefore;
-		stats->peakMemoryBytes = peakMem;
-	}
-
-	return x;
+	return LinearSolverResult{
+		.solution = std::move(x),
+		.stats = stats
+	};
 }
 
 } // namespace fem::solver::linear

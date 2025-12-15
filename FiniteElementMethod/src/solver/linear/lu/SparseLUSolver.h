@@ -7,15 +7,10 @@
 namespace fem::solver::linear
 {
 
-/// <summary>
-/// Sparse LU decomposition solver.
-/// General purpose solver for any non-singular matrix.
-/// Works for both symmetric and non-symmetric systems.
-/// </summary>
 class SparseLUSolver : public ILinearSolver
 {
 public:
-	std::expected<Vec, SolverError> Solve(const SpMat& A, const Vec& b, LinearSolverStats* stats = nullptr) override;
+	std::expected<LinearSolverResult, SolverError> Solve(const SpMat& A, const Vec& b) override;
 
 	std::string GetName() const override
 	{
