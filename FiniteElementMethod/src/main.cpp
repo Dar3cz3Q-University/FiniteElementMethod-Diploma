@@ -1,3 +1,4 @@
+#include "config/config.h"
 #include "core/core.h"
 #include "cli/cli.h"
 
@@ -7,6 +8,8 @@
 
 int main(int argc, const char* const* argv)
 {
+	fem::config::PrintCompileConfig();
+
 	std::expected<fem::core::ApplicationOptions, fem::cli::CliError> options;
 
 #ifdef _DEBUG

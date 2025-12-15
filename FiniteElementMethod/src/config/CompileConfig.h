@@ -1,4 +1,8 @@
-#pragma once
+﻿#pragma once
+
+#include "logger/logger.h"
+
+#include <print>
 
 #include <Eigen/Sparse>
 
@@ -7,9 +11,6 @@ namespace fem::config
 
 // ============================================================================
 // SPARSE MATRIX STORAGE FORMAT
-// ============================================================================
-// ColMajor (CSC)
-// RowMajor (CSR)
 // ============================================================================
 
 //#define FEM_USE_ROW_MAJOR  // Uncomment for CSR format
@@ -40,4 +41,24 @@ using DefaultOrderingType = Eigen::AMDOrdering<int>;
 constexpr const char* ReorderingName = "AMD";
 #endif
 
+inline void PrintCompileConfig()
+{
+	std::println("Compile Configuration:");
+	std::println("Precision: double (64-bit)");
+	std::println("Storage Format: {}", StorageOrderName);
+	std::println("Reordering: {}", ReorderingName);
+
+#ifdef NDEBUG
+	std::println("Build Type: Release");
+#else
+	std::println("Build Type: Debug");
+#endif
+
+#ifdef _OPENMP
+	std::println("OpenMP: Enabled");
+#else
+	std::println("OpenMP: Disabled");
+#endif
 }
+
+} // namespace fem::config
