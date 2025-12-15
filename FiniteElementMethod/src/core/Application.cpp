@@ -2,6 +2,7 @@
 
 #include "config/config.h"
 #include "domain/domain.h"
+#include "fileio/fileio.h"
 #include "logger/logger.h"
 #include "mesh/mesh.h"
 #include "solver/solver.h"
@@ -125,6 +126,22 @@ ExitCode Application::Execute()
 		LOG_ERROR(solution.error().ToString());
 		return SolverError;
 	}
+
+	if (m_Options.metricsFilePath.has_value())
+	{
+		const auto& metricsExported = fileio::StatsExporter::Export(
+			m_Options.metricsFilePath.value(),
+			solver::linear::LinearSolverTypeToString(m_Options.LinearSolverType),
+			solution->stats);
+
+		if (!metricsExported)
+		{
+			LOG_ERROR(metricsExported.error());
+			return MetricsExportError;
+		}
+	}
+
+	// TODO: Export solution to .vtk files
 
 	return Success;
 }

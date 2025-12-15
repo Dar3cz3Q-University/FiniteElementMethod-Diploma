@@ -31,6 +31,8 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 		);
 	}
 
+	auto start = Now();
+
 	LinearSolverStats stats;
 	stats.matrixSize = A.rows();
 	stats.matrixNonZeros = A.nonZeros();
@@ -77,6 +79,9 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 	size_t memAfter = metrics::MemoryMonitor::GetCurrentUsage();
 	stats.memoryUsedBytes = memAfter - memBefore;
 	stats.peakMemoryBytes = metrics::MemoryMonitor::GetPeakUsage();
+
+	auto end = Now();
+	stats.elapsedTimeMs = ElapsedMs(start, end);
 
 	return LinearSolverResult{
 		.solution = std::move(x),

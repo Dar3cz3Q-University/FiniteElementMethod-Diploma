@@ -21,6 +21,8 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 		("h,help", "Show help message")
 		("i,input", "Input config file path",
 			cxxopts::value<std::string>())
+		("m,metrics", "Metrics file path",
+			cxxopts::value<std::string>())
 		("t,threads", "Number of threads (default: hardware concurrency)",
 			cxxopts::value<std::size_t>())
 		("s,solver", GenerateSolverHelpText(),
@@ -50,6 +52,9 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 	core::ApplicationOptions config{};
 
 	if (auto res = ExtractConfigFilePath(result, &config); !res)
+		return std::unexpected(res.error());
+
+	if (auto res = ExtractMetricsFilePath(result, &config); !res)
 		return std::unexpected(res.error());
 
 	if (auto res = ExtractThreadsNumber(result, &config); !res)
@@ -93,6 +98,14 @@ std::expected<void, CliError> CliParser::ExtractConfigFilePath(const cxxopts::Pa
 				"Config file not found: " + config->configFilePath.string()
 			}
 		);
+
+	return {};
+}
+
+std::expected<void, CliError> CliParser::ExtractMetricsFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	if (!result.count("metrics"))
+		config->metricsFilePath = result["metrics"].as<std::string>();
 
 	return {};
 }

@@ -23,6 +23,7 @@ private:
 	static std::string GenerateSolverHelpText();
 
 	static std::expected<void, CliError> ExtractConfigFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
+	static std::expected<void, CliError> ExtractMetricsFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 	static std::expected<void, CliError> ExtractThreadsNumber(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 	static std::expected<void, CliError> ExtractSolverType(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 };

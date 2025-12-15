@@ -10,6 +10,7 @@ enum class ExitCode : int
 	ConfigError,
 	MeshError,
 	DomainError,
+	MetricsExportError,
 	SolverError,
 };
 

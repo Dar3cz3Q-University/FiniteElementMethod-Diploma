@@ -2,7 +2,8 @@
 
 #include <fstream>
 
-namespace fem::fileio {
+namespace fem::fileio
+{
 
 std::expected<std::string, FileServiceError> FileService::Read(const std::filesystem::path& path)
 {
@@ -42,43 +43,43 @@ std::expected<std::string, FileServiceError> FileService::Read(const std::filesy
 
 std::expected<void, FileServiceError> FileService::Write(const std::filesystem::path& path, const std::string& content)
 {
-    std::error_code ec;
+	std::error_code ec;
 
-    if (!fs::exists(path, ec))
-    {
-        const auto parent = path.parent_path();
-        if (!parent.empty() && !fs::exists(parent, ec))
-        {
-            return std::unexpected(FileServiceError{ FileServiceErrorCode::ParentDirectoryNotFound, path, ec.message() });
-        }
-    }
-    else
-    {
-        if (!fs::is_regular_file(path, ec))
-        {
-            return std::unexpected(FileServiceError{ FileServiceErrorCode::NotAFile, path, ec.message() });
-        }
-    }
+	if (!fs::exists(path, ec))
+	{
+		const auto parent = path.parent_path();
+		if (!parent.empty() && !fs::exists(parent, ec))
+		{
+			return std::unexpected(FileServiceError{ FileServiceErrorCode::ParentDirectoryNotFound, path, ec.message() });
+		}
+	}
+	else
+	{
+		if (!fs::is_regular_file(path, ec))
+		{
+			return std::unexpected(FileServiceError{ FileServiceErrorCode::NotAFile, path, ec.message() });
+		}
+	}
 
-    if (ec)
-    {
-        return std::unexpected(FileServiceError{ FileServiceErrorCode::ReadFailure, path, ec.message() });
-    }
+	if (ec)
+	{
+		return std::unexpected(FileServiceError{ FileServiceErrorCode::ReadFailure, path, ec.message() });
+	}
 
-    std::ofstream file(path, std::ios::out | std::ios::trunc);
-    if (!file)
-    {
-        return std::unexpected(FileServiceError{ FileServiceErrorCode::PermissionDenied, path, "Failed to open file." });
-    }
+	std::ofstream file(path, std::ios::out | std::ios::trunc);
+	if (!file)
+	{
+		return std::unexpected(FileServiceError{ FileServiceErrorCode::PermissionDenied, path, "Failed to open file." });
+	}
 
-    file << content;
+	file << content;
 
-    if (!file.good())
-    {
-        return std::unexpected(FileServiceError{ FileServiceErrorCode::WriteFailure, path, "Failed to write file." });
-    }
+	if (!file.good())
+	{
+		return std::unexpected(FileServiceError{ FileServiceErrorCode::WriteFailure, path, "Failed to write file." });
+	}
 
-    return {};
+	return {};
 }
 
 }

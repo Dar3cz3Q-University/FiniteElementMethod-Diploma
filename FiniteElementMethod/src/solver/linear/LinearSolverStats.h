@@ -1,5 +1,7 @@
 #pragma once
 
+#include "utils/utils.h"
+
 namespace fem::solver::linear
 {
 
@@ -11,7 +13,7 @@ struct LinearSolverStats
 
 	double residualNorm = 0.0;
 
-	size_t memoryUsedBytes = 0;
+	size_t memoryUsedBytes = 0; // TODO: Change the way it's calculated
 	size_t peakMemoryBytes = 0;
 
 	size_t matrixSize = 0;
@@ -19,12 +21,12 @@ struct LinearSolverStats
 
 	double getMemoryUsedMB() const
 	{
-		return memoryUsedBytes / (1024.0 * 1024.0);
+		return BytesToMiB(memoryUsedBytes);
 	}
 
 	double getPeakMemoryMB() const
 	{
-		return peakMemoryBytes / (1024.0 * 1024.0);
+		return BytesToMiB(peakMemoryBytes);
 	}
 };
 

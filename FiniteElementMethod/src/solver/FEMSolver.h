@@ -14,6 +14,7 @@ namespace fem::solver
 
 class FEMSolver
 {
+
 public:
 	static std::expected<FEMSolverResult, SolverError> Solve(const SpMat& H, const SpMat& C, const Vec& P, const FEMSolverConfig& config);
 

@@ -11,6 +11,7 @@ inline ApplicationOptions GetSteadyTest()
 {
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\steady.json";
+	opts.metricsFilePath = "..\\metrics.csv";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	opts.numberOfThreads = 2;
 	return opts;
@@ -20,6 +21,7 @@ inline ApplicationOptions GetTransientTest()
 {
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\transient.json";
+	opts.metricsFilePath = "..\\metrics.csv";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	return opts;
 }
@@ -28,6 +30,7 @@ inline ApplicationOptions GetLargeTest()
 {
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\large.json";
+	opts.metricsFilePath = "..\\metrics.csv";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	opts.numberOfThreads = 16;
 	return opts;
