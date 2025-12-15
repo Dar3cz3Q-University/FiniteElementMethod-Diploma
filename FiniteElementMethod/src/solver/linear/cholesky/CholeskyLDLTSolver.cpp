@@ -4,7 +4,7 @@
 #include "metrics/metrics.h"
 #include "utils/utils.h"
 
-#include <Eigen/SparseCholesky>
+#include <Eigen/PardisoSupport>
 
 namespace fem::solver::linear
 {
@@ -41,7 +41,7 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 
 	auto factorStart = Now();
 
-	Eigen::SimplicialLDLT<SpMat, Eigen::Lower, config::DefaultOrderingType> solver;
+	Eigen::PardisoLDLT<SpMat> solver;
 	solver.compute(A);
 
 	auto factorEnd = Now();

@@ -4,7 +4,7 @@ project "App"
   cppdialect "C++23"
 
   defines {
-    "EIGEN_USE_THREADS"
+    "EIGEN_USE_MKL_ALL"
   }
 
   targetdir (OutputDir .. "/%{prj.name}")
@@ -18,3 +18,23 @@ project "App"
   includedirs {
     "src",
   }
+  
+  filter {}
+
+  filter "system:windows"
+    links { 
+      "mkl_intel_lp64",
+      "mkl_sequential",
+      "mkl_core"
+    }
+  filter "system:linux"
+    links {
+      "mkl_intel_lp64",
+      "mkl_sequential",
+      "mkl_core",
+      "pthread",
+      "m",
+      "dl"
+    }
+  
+  filter {}

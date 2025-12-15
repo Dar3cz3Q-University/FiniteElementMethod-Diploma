@@ -1,4 +1,4 @@
-#include "Application.h"
+﻿#include "Application.h"
 
 #include "config/config.h"
 #include "domain/domain.h"
@@ -10,8 +10,10 @@
 #include <iostream>
 #include <thread>
 
+#include <Eigen/Core>
 #include "gmsh.h"
 #include <omp.h>
+#include <mkl.h>
 
 namespace fem::core
 {
@@ -40,6 +42,8 @@ void Application::Initialize()
 		nThreads = m_Options.numberOfThreads.value();
 
 	omp_set_num_threads(nThreads);
+	Eigen::setNbThreads(nThreads);
+	mkl_set_num_threads(nThreads);
 
 	LOG_INFO("Initialization completed");
 	LOG_INFO(m_Options.ToString());
