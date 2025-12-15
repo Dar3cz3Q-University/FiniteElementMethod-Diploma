@@ -5,11 +5,6 @@
 namespace fem::domain::integration
 {
 
-/// <summary>
-/// Precomputed Gauss-Legendre quadrature points on the interval [-1, 1].
-/// Each inner vector contains the quadrature points for a given order:
-/// index 0 -> 1-point rule, index 1 -> 2-point rule, ..., index 4 -> 5-point rule.
-/// </summary>
 inline static const std::vector<std::vector<double>> LEGENDRE_POINTS = {
 	{ 0.0 },
 	{ -sqrt(1.0 / 3.0), sqrt(1.0 / 3.0) },
@@ -29,11 +24,6 @@ inline static const std::vector<std::vector<double>> LEGENDRE_POINTS = {
 	}
 };
 
-/// <summary>
-/// Precomputed Gauss-Legendre quadrature weights corresponding to <see cref="LEGENDRE_POINTS"/>.
-/// Each inner vector contains the weights for a given order:
-/// index 0 -> 1-point rule, index 1 -> 2-point rule, ..., index 4 -> 5-point rule.
-/// </summary>
 inline static const std::vector<std::vector<double>> LEGENDRE_WEIGHTS = {
 	{ 2.0 },
 	{ 1.0, 1.0 },

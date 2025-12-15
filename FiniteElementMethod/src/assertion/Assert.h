@@ -2,11 +2,6 @@
 
 #include "logger/logger.h"
 
-/// <summary>
-/// Assertion macro for validating conditions during debugging.
-/// In debug builds, if the condition is false, logs an error message
-/// with details and aborts the program. In release builds, does nothing.
-/// </summary>
 #ifdef _DEBUG
 
 #define FEM_ASSERT(condition, message) \
@@ -25,11 +20,6 @@
 
 #endif
 
-/// <summary>
-/// Verification macro for checking conditions in debug builds.
-/// In debug builds, if the condition is false, triggers an assertion failure.
-/// In release builds, does nothing.
-/// </summary>
 #ifdef _DEBUG
 
 #define FEM_VERIFY(condition) FEM_ASSERT(condition, #condition)

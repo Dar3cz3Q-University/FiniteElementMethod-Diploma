@@ -16,12 +16,6 @@ namespace fem::config::loader
 class ConfigLoader
 {
 public:
-	/// <summary>
-	/// Load and parse configuration from JSON file.
-	/// Validates all required fields and returns detailed errors on failure.
-	/// </summary>
-	/// <param name="configPath">Path to JSON configuration file</param>
-	/// <returns>Parsed configuration or error</returns>
 	static std::expected<ProblemConfig, ConfigLoaderError> LoadFromFile(const std::filesystem::path& configPath);
 
 private:

@@ -17,12 +17,6 @@ class CliParser
 public:
 	CliParser() = default;
 
-	/// <summary>
-	/// Parse command-line arguments into application configuration
-	/// </summary>
-	/// <param name="argc">Argument count</param>
-	/// <param name="argv">Argument values</param>
-	/// <returns>Parsed configuration or error</returns>
 	static std::expected<core::ApplicationOptions, CliError> Parse(int argc, const char* const* argv);
 
 private:

@@ -9,10 +9,6 @@
 namespace fem::config
 {
 
-// ============================================================================
-// SPARSE MATRIX STORAGE FORMAT
-// ============================================================================
-
 //#define FEM_USE_ROW_MAJOR  // Uncomment for CSR format
 
 #ifdef FEM_USE_ROW_MAJOR
@@ -22,10 +18,6 @@ constexpr const char* StorageOrderName = "CSR (RowMajor)";
 constexpr int StorageOrder = Eigen::ColMajor;
 constexpr const char* StorageOrderName = "CSC (ColMajor)";
 #endif
-
-// ============================================================================
-// MATRIX REORDERING STRATEGY
-// ============================================================================
 
 //#define FEM_USE_NATURAL_ORDERING  // Uncomment for no reordering
 //#define FEM_USE_COLAMD_ORDERING   // Uncomment for COLAMD

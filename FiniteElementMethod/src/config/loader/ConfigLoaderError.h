@@ -6,55 +6,20 @@
 namespace fem::config::loader
 {
 
-/// <summary>
-/// Configuration loading error types.
-/// </summary>
 enum class ConfigLoaderErrorCode : int
 {
-	/// <summary>
-	/// File-related error (not found, cannot read, etc.)
-	/// </summary>
 	FileError = 0,
-
-	/// <summary>
-	/// JSON parsing error (invalid syntax)
-	/// </summary>
 	ParserError,
-
-	/// <summary>
-	/// Required field missing in JSON
-	/// </summary>
 	MissingRequiredField,
-
-	/// <summary>
-	/// Field value is invalid or out of range
-	/// </summary>
 	InvalidValue,
-
-	/// <summary>
-	/// Unspecified or unexpected error
-	/// </summary>
 	Unknown,
 };
 
-/// <summary>
-/// Represents an error reported by the FEM configuration loader
-/// </summary>
 struct ConfigLoaderError
 {
-	/// <summary>
-	/// Error type code
-	/// </summary>
 	ConfigLoaderErrorCode code;
-
-	/// <summary>
-	/// Detailed error description
-	/// </summary>
 	std::string message;
 
-	/// <summary>
-	/// Convert error to human-readable string
-	/// </summary>
 	std::string ToString() const
 	{
 		using enum ConfigLoaderErrorCode;

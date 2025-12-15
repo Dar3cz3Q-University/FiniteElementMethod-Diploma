@@ -2,8 +2,8 @@
   "mesh_path": "..\\assets\\mesh\\large.msh",
   "problem": {
     "type": "transient",
-    "total_time": 5000,
-    "time_step": 5,
+    "total_time": 500,
+    "time_step": 50,
     "initial_conditions": {
       "uniform_temperature": 100
     }
