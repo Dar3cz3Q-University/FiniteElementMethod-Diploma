@@ -1,0 +1,43 @@
+#pragma once
+
+#include <Eigen/Sparse>
+
+namespace fem::config
+{
+
+// ============================================================================
+// SPARSE MATRIX STORAGE FORMAT
+// ============================================================================
+// ColMajor (CSC)
+// RowMajor (CSR)
+// ============================================================================
+
+//#define FEM_USE_ROW_MAJOR  // Uncomment for CSR format
+
+#ifdef FEM_USE_ROW_MAJOR
+constexpr int StorageOrder = Eigen::RowMajor;
+constexpr const char* StorageOrderName = "CSR (RowMajor)";
+#else
+constexpr int StorageOrder = Eigen::ColMajor;
+constexpr const char* StorageOrderName = "CSC (ColMajor)";
+#endif
+
+// ============================================================================
+// MATRIX REORDERING STRATEGY
+// ============================================================================
+
+//#define FEM_USE_NATURAL_ORDERING  // Uncomment for no reordering
+//#define FEM_USE_COLAMD_ORDERING   // Uncomment for COLAMD
+
+#if defined(FEM_USE_NATURAL_ORDERING)
+using DefaultOrderingType = Eigen::NaturalOrdering<int>;
+constexpr const char* ReorderingName = "Natural (No Reordering)";
+#elif defined(FEM_USE_COLAMD_ORDERING)
+using DefaultOrderingType = Eigen::COLAMDOrdering<int>;
+constexpr const char* ReorderingName = "COLAMD";
+#else
+using DefaultOrderingType = Eigen::AMDOrdering<int>;
+constexpr const char* ReorderingName = "AMD";
+#endif
+
+}

@@ -1,5 +1,7 @@
 #include "SparseQRSolver.h"
 
+#include "config/CompileConfig.h"
+
 #include <chrono>
 
 namespace fem::solver::linear
@@ -32,7 +34,7 @@ std::expected<Vec, SolverError> SparseQRSolver::Solve(
 
 	auto start = std::chrono::high_resolution_clock::now();
 
-	Eigen::SparseQR<SpMat, Eigen::COLAMDOrdering<int>> solver;
+	Eigen::SparseQR<SpMat, config::DefaultOrderingType> solver;
 	solver.compute(A);
 
 	// TODO: Map Eigen errors to SolverError more precisely

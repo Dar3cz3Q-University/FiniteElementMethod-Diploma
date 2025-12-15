@@ -11,7 +11,7 @@ inline ApplicationOptions GetSteadyTest()
 {
 	ApplicationOptions opts;
 	opts.configFilePath = "..\\assets\\config\\steady.json";
-	opts.LinearSolverType = solver::linear::LinearSolverType::SparseLU;
+	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 	opts.numberOfThreads = 2;
 	return opts;
 }

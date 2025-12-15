@@ -1,5 +1,8 @@
 #include "CholeskyLDLTSolver.h"
 
+#include "config/CompileConfig.h"
+#include "metrics/metrics.h"
+
 #include <chrono>
 
 #include <Eigen/SparseCholesky>
@@ -29,9 +32,10 @@ std::expected<Vec, SolverError> CholeskyLDLTSolver::Solve(const SpMat& A, const 
 		);
 	}
 
-	auto start = std::chrono::high_resolution_clock::now();
+	size_t memBefore = metrics::MemoryMonitor::GetCurrentUsage();
+	auto totalStart = std::chrono::high_resolution_clock::now();
 
-	Eigen::SimplicialLDLT<SpMat> solver;
+	Eigen::SimplicialLDLT<SpMat, Eigen::Lower, config::DefaultOrderingType> solver;
 	solver.compute(A);
 
 	// TODO: Map Eigen errors to SolverError more precisely
@@ -62,7 +66,7 @@ std::expected<Vec, SolverError> CholeskyLDLTSolver::Solve(const SpMat& A, const 
 
 	if (stats)
 	{
-		stats->elapsedTimeMs = std::chrono::duration<double, std::milli>(end - start).count();
+		stats->elapsedTimeMs = std::chrono::duration<double, std::milli>(end - totalStart).count();
 		stats->residualNorm = (A * x - b).norm();
 	}
 

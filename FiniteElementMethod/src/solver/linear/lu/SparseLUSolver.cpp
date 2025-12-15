@@ -1,5 +1,7 @@
 #include "SparseLUSolver.h"
 
+#include "config/CompileConfig.h"
+
 #include <chrono>
 
 namespace fem::solver::linear
@@ -29,7 +31,7 @@ std::expected<Vec, SolverError> SparseLUSolver::Solve(const SpMat& A, const Vec&
 
 	auto start = std::chrono::high_resolution_clock::now();
 
-	Eigen::SparseLU<SpMat> solver;
+	Eigen::SparseLU<SpMat, config::DefaultOrderingType> solver;
 	solver.compute(A);
 
 	// TODO: Map Eigen errors to SolverError more precisely
