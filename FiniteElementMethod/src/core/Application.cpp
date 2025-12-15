@@ -40,6 +40,7 @@ void Application::Initialize()
 		nThreads = m_Options.numberOfThreads.value();
 
 	omp_set_num_threads(nThreads);
+	config::OpenBLASConfig::SetNumThreads(nThreads);
 
 	LOG_INFO("Initialization completed");
 	LOG_INFO(m_Options.ToString());

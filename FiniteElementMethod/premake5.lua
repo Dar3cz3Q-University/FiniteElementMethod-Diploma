@@ -4,7 +4,7 @@ project "App"
   cppdialect "C++23"
 
   defines {
-    "EIGEN_USE_THREADS"
+    "EIGEN_USE_BLAS"
   }
 
   targetdir (OutputDir .. "/%{prj.name}")
