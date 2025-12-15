@@ -24,6 +24,7 @@ workspace "FiniteElementMethod"
 
   filter "system:windows"
     buildoptions { "/utf-8", "/openmp", "/external:W0" }
+    links { "psapi" }
     externalwarnings "Off"
   filter "system:linux"
     buildoptions { "-fopenmp" }
@@ -53,9 +54,10 @@ workspace "FiniteElementMethod"
   filter "configurations:Release"
     defines { "NDEBUG" }
     runtime "Release"
-    optimize "on"
+    optimize "Full"
     libdirs { vcpkgInstalled .. "/lib" }
     links(releaseLibraries)
+    linktimeoptimization "On"
   filter {}
 
   filter "system:windows"
