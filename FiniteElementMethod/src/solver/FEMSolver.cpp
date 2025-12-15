@@ -1,5 +1,7 @@
 #include "FEMSolver.h"
 
+#include "metrics/metrics.h"
+
 #include <chrono>
 
 namespace fem::solver
@@ -68,11 +70,15 @@ std::expected<FEMSolverResult, SolverError> fem::solver::FEMSolver::SolveSteady(
 	auto endTime = std::chrono::high_resolution_clock::now();
 	double totalTime = std::chrono::duration<double, std::milli>(endTime - startTime).count();
 
-	LOG_INFO("Solver time (pure): {:.2f} ms", stats.elapsedTimeMs);
-	LOG_INFO("Total time (with overhead): {:.2f} ms", totalTime);
-	LOG_INFO("Overhead: {:.2f} ms", totalTime - stats.elapsedTimeMs);
-	LOG_INFO("Residual norm: {:.2e}", stats.residualNorm);
-	LOG_INFO("Solution T_min = {:.2f} K, T_max = {:.2f} K", solution->minCoeff(), solution->maxCoeff());
+	LOG_INFO("Steady Analysis Complete:");
+	LOG_INFO("  Factorization time: {:.2f} ms", stats.factorizationTimeMs);
+	LOG_INFO("  Solve time:         {:.2f} ms", stats.solveTimeMs);
+	LOG_INFO("  Total solver time:  {:.2f} ms", stats.elapsedTimeMs);
+	LOG_INFO("  Overhead:           {:.2f} ms", totalTime - stats.elapsedTimeMs);
+	LOG_INFO("  Memory used:        {:.2f} MB", stats.getMemoryUsedMB());
+	LOG_INFO("  Peak memory:        {:.2f} MB", stats.getPeakMemoryMB());
+	LOG_INFO("  Residual norm:      {:.2e}", stats.residualNorm);
+	LOG_INFO("  Solution range:     T_min = {:.2f} K, T_max = {:.2f} K", solution->minCoeff(), solution->maxCoeff());
 
 	return FEMSolverResult{
 		.solution = *solution,
@@ -115,24 +121,32 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 				std::format("Time step and total time must be positive")
 			});
 
-	LOG_INFO("Total time: {:.3f} s, Time step: {:.6f} s",
-		config.totalTime, config.timeStep);
-
 	double dt = config.timeStep;
 	std::size_t numSteps = static_cast<std::size_t>(config.totalTime / dt);
-
-	LOG_INFO("Number of time steps: {}", numSteps);
-	LOG_INFO("System size: {} nodes", H.rows());
 
 	SpMat A = H + C / dt;
 
 	auto linearSolver = linear::LinearSolverFactory::Create(solverType);
-	LOG_INFO("Using linear solver: {}", linearSolver->GetName());
 
+	LOG_INFO("Configuration:");
+	LOG_INFO("  Total time:       {:.3f} s", config.totalTime);
+	LOG_INFO("  Time step:        {:.6f} s", config.timeStep);
+	LOG_INFO("  Number of steps:  {}", numSteps);
+	LOG_INFO("  System size:      {} nodes", H.rows());
+	LOG_INFO("  Initial temp:     {:.2f} K", config.initialTemperature);
+	LOG_INFO("  Linear solver:    {}", linearSolver->GetName());
+
+	size_t memBefore = metrics::MemoryMonitor::GetCurrentUsage();
 	auto startTime = std::chrono::high_resolution_clock::now();
 
 	Vec T_current = Vec::Constant(H.rows(), config.initialTemperature);
+
 	double totalSolverTime = 0.0;
+	double totalFactorizationTime = 0.0;
+	double totalSolveTime = 0.0;
+	double minResidual = std::numeric_limits<double>::max();
+	double maxResidual = 0.0;
+	size_t peakMemoryAtStep = 0;
 
 	for (int step = 0; step < numSteps; ++step)
 	{
@@ -145,13 +159,15 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 
 		if (!T_new)
 		{
-			LOG_WARN("LOOOL");
-			/*return std::unexpected(std::format(
-				"Linear solver failed at time step {} (t={:.3f}s): {}",
-				step, currentTime, T_new.error().ToString()));*/
+			return std::unexpected(T_new.error());
 		}
 
 		totalSolverTime += stats.elapsedTimeMs;
+		totalFactorizationTime += stats.factorizationTimeMs;
+		totalSolveTime += stats.solveTimeMs;
+		minResidual = std::min(minResidual, stats.residualNorm);
+		maxResidual = std::max(maxResidual, stats.residualNorm);
+
 		T_current = *T_new;
 
 		if (step % 100 == 0 || step == numSteps - 1)
@@ -173,12 +189,21 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 	}
 
 	auto endTime = std::chrono::high_resolution_clock::now();
-	double totalElapsedTime = std::chrono::duration<double, std::milli>(
-		endTime - startTime).count();
+	double totalElapsedTime = std::chrono::duration<double, std::milli>(endTime - startTime).count();
 
-	LOG_INFO("Transient solved in {:.2f} s", totalElapsedTime / 1000.0);
-	LOG_INFO("Total solver time: {:.2f} s", totalSolverTime / 1000.0);
-	LOG_INFO("Average per time step: {:.2f} ms", totalSolverTime / numSteps);
+	size_t memAfter = metrics::MemoryMonitor::GetCurrentUsage();
+	size_t peakMem = metrics::MemoryMonitor::GetPeakUsage();
+
+	LOG_INFO("Transient Analysis Complete:");
+	LOG_INFO("  Total wall time:        {:.2f} s", totalElapsedTime / 1000.0);
+	LOG_INFO("  Total solver time:      {:.2f} s", totalSolverTime / 1000.0);
+	LOG_INFO("  Avg factorization:      {:.2f} ms/step", totalFactorizationTime / numSteps);
+	LOG_INFO("  Avg solve:              {:.2f} ms/step", totalSolveTime / numSteps);
+	LOG_INFO("  Avg per time step:      {:.2f} ms", totalSolverTime / numSteps);
+	LOG_INFO("  Memory used:            {:.2f} MB", (memAfter - memBefore) / (1024.0 * 1024.0));
+	LOG_INFO("  Peak memory:            {:.2f} MB", peakMem / (1024.0 * 1024.0));
+	LOG_INFO("  Residual range:         [{:.2e}, {:.2e}]", minResidual, maxResidual);
+	LOG_INFO("  Final temperature:      T_min = {:.2f} K, T_max = {:.2f} K", T_current.minCoeff(), T_current.maxCoeff());
 
 	return FEMSolverResult{
 		.solution = T_current,
