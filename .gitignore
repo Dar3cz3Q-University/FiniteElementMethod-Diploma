@@ -1,11 +1,12 @@
+# CSV Files
+*.csv
+
 # Builds
 build/
 
 # Visual Studio files
 *.vcxproj*
 *.sln
-
-
 
 # User-specific files
 *.rsuser
