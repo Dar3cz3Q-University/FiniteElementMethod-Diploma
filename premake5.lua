@@ -41,21 +41,24 @@ workspace "FiniteElementMethod"
     vcpkgTriplet = "x64-linux"
   end
 
-  local vcpkgInstalled = path.getabsolute("vcpkg_installed/" .. vcpkgTriplet)
+  VcpkgInstalled = path.getabsolute("vcpkg_installed/" .. vcpkgTriplet)
 
-  externalincludedirs { vcpkgInstalled .. "/include" }
+  externalincludedirs { VcpkgInstalled .. "/include" }
 
   filter "configurations:Debug"
     defines { "DEBUG" }
     runtime "Debug"
     symbols "on"
-    libdirs { vcpkgInstalled .. "/debug/lib" }
+    libdirs {
+        VcpkgInstalled .. "/debug/lib",
+        VcpkgInstalled .. "/lib"
+    }
     links(debugLibraries)
   filter "configurations:Release"
     defines { "NDEBUG" }
     runtime "Release"
     optimize "Full"
-    libdirs { vcpkgInstalled .. "/lib" }
+    libdirs { VcpkgInstalled .. "/lib" }
     links(releaseLibraries)
     linktimeoptimization "On"
   filter {}
