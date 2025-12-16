@@ -1,5 +1,6 @@
 ﻿#include "Application.h"
 
+#include "cache/cache.h"
 #include "config/config.h"
 #include "domain/domain.h"
 #include "fileio/fileio.h"
@@ -84,33 +85,53 @@ ExitCode Application::Execute()
 
 	const auto& config = *parsedConfig;
 
-	mesh::provider::MeshProvider provider{};
-	const auto& mesh = provider.LoadMesh(config.meshPath);
+	auto cachedSystem = cache::CacheManager::LoadSystem("cache", m_Options.configFilePath.string(), parsedConfig->meshPath.string(), true);
 
-	if (!mesh)
+	SpMat H, C;
+	Vec P;
+
+	if (cachedSystem)
 	{
-		LOG_ERROR(mesh.error().ToString());
-		return MeshError;
+		H = std::move(cachedSystem->H);
+		C = std::move(cachedSystem->C);
+		P = std::move(cachedSystem->P);
+
+		LOG_INFO("System loaded from cache");
 	}
-
-	domain::ElementMatrixBuilder elementBuilder(
-		config.material,
-		config.boundaryCondition // TODO: Use vector of BCs
-	);
-
-	domain::GlobalMatrixBuilder matrixBuilder(*mesh, elementBuilder);
-
-	const auto& matrices = matrixBuilder.Build();
-
-	if (!matrices)
+	else
 	{
-		LOG_ERROR(matrices.error());
-		return DomainError;
-	}
+		LOG_INFO("Cache miss - assembling system...");
 
-	const auto& H = matrices->H;
-	const auto& C = matrices->C;
-	const auto& P = matrices->P;
+		mesh::provider::MeshProvider provider{};
+		const auto& mesh = provider.LoadMesh(config.meshPath);
+
+		if (!mesh)
+		{
+			LOG_ERROR(mesh.error().ToString());
+			return MeshError;
+		}
+
+		domain::ElementMatrixBuilder elementBuilder(
+			config.material,
+			config.boundaryCondition // TODO: Use vector of BCs
+		);
+
+		domain::GlobalMatrixBuilder matrixBuilder(*mesh, elementBuilder);
+
+		const auto& matrices = matrixBuilder.Build();
+
+		if (!matrices)
+		{
+			LOG_ERROR(matrices.error());
+			return DomainError;
+		}
+
+		H = matrices->H;
+		C = matrices->C;
+		P = matrices->P;
+
+		cache::CacheManager::SaveTransientSystem("cache", H, C, P, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
+	}
 
 	auto solverConfig = solver::FEMSolverConfig{
 		.problemType = config.problemType,
@@ -144,6 +165,8 @@ ExitCode Application::Execute()
 			return MetricsExportError;
 		}
 	}
+
+	cache::CacheManager::PrintCacheInfo("cache");
 
 	// TODO: Export solution to .vtk files
 

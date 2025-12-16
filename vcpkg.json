@@ -8,6 +8,7 @@
     "cxxopts",
     "eigen3",
     "nlohmann-json",
-    "intel-mkl"
+    "intel-mkl",
+    "xxhash"
   ]
 }
