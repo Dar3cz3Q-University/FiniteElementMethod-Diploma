@@ -3,13 +3,23 @@ local vcpkg = require "vcpkg-manifest"
 local debugLibraries = {
   "fmtd",
   "spdlogd",
-  "gmsh.dll"
+  "gmsh.dll.lib",
+  "xxhash",
+  "mkl_intel_lp64",
+  "mkl_intel_thread",
+  "mkl_core",
+  "libiomp5md"
 }
 
 local releaseLibraries = {
   "fmt",
   "spdlog",
-  "gmsh.dll"
+  "gmsh.dll.lib",
+  "xxhash",
+  "mkl_intel_lp64",
+  "mkl_intel_thread",
+  "mkl_core",
+  "libiomp5md"
 }
 
 workspace "FiniteElementMethod"
@@ -24,6 +34,7 @@ workspace "FiniteElementMethod"
 
   filter "system:windows"
     buildoptions { "/utf-8", "/openmp", "/external:W0" }
+    staticruntime "off"
     links { "psapi" }
     externalwarnings "Off"
   filter "system:linux"
@@ -41,7 +52,9 @@ workspace "FiniteElementMethod"
     vcpkgTriplet = "x64-linux"
   end
 
-  VcpkgInstalled = path.getabsolute("vcpkg_installed/" .. vcpkgTriplet)
+  local vcpkgRoot = path.getabsolute("vcpkg_installed")
+
+  VcpkgInstalled = vcpkgRoot .. "/" .. vcpkgTriplet
 
   externalincludedirs { VcpkgInstalled .. "/include" }
 
@@ -51,7 +64,6 @@ workspace "FiniteElementMethod"
     symbols "on"
     libdirs {
         VcpkgInstalled .. "/debug/lib",
-        VcpkgInstalled .. "/lib"
     }
     links(debugLibraries)
   filter "configurations:Release"
@@ -60,7 +72,7 @@ workspace "FiniteElementMethod"
     optimize "Full"
     libdirs { VcpkgInstalled .. "/lib" }
     links(releaseLibraries)
-    linktimeoptimization "On"
+    linktimeoptimization "on"
   filter {}
 
   vcpkg.enableVcpkgManifest()
