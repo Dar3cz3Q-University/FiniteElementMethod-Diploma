@@ -1,6 +1,6 @@
 #pragma once
 
-#ifdef _DEBUG
+#ifdef DEBUG
 
 #include "ApplicationOptions.h"
 

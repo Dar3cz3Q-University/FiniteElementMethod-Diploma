@@ -104,9 +104,9 @@ ExitCode Application::Execute()
 		return DomainError;
 	}
 
-	const auto& H = matrices.value().H;
-	const auto& C = matrices.value().C;
-	const auto& P = matrices.value().P;
+	const auto& H = matrices->H;
+	const auto& C = matrices->C;
+	const auto& P = matrices->P;
 
 	auto solverConfig = solver::FEMSolverConfig{
 		.problemType = config.problemType,

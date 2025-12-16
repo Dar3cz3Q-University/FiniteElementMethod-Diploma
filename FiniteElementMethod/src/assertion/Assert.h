@@ -2,7 +2,7 @@
 
 #include "logger/logger.h"
 
-#ifdef _DEBUG
+#ifdef DEBUG
 
 #define FEM_ASSERT(condition, message) \
         do { \
@@ -20,7 +20,7 @@
 
 #endif
 
-#ifdef _DEBUG
+#ifdef DEBUG
 
 #define FEM_VERIFY(condition) FEM_ASSERT(condition, #condition)
 
