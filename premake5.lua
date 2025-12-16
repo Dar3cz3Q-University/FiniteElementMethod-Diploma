@@ -63,25 +63,6 @@ workspace "FiniteElementMethod"
     linktimeoptimization "On"
   filter {}
 
-  filter "system:windows"
-    links { 
-      "mkl_intel_lp64",
-      "mkl_core",
-      "mkl_intel_thread",
-      "libiomp5md"
-    }
-  filter "system:linux"
-    links {
-      "mkl_intel_lp64",
-      "mkl_core",
-      "mkl_gnu_thread",
-      "gomp",
-      "pthread",
-      "m",
-      "dl"
-    }
-  filter {}
-
   vcpkg.enableVcpkgManifest()
 
   include "FiniteElementMethod/premake5"

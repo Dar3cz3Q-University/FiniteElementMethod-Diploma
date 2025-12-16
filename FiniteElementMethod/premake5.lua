@@ -4,7 +4,8 @@ project "App"
   cppdialect "C++23"
 
   defines {
-    "EIGEN_USE_MKL_ALL"
+    "EIGEN_USE_MKL_ALL",
+    "MKL_DIRECT_CALL"
   }
 
   targetdir (OutputDir .. "/%{prj.name}")
@@ -18,23 +19,22 @@ project "App"
   includedirs {
     "src",
   }
-  
-  filter {}
 
   filter "system:windows"
     links { 
       "mkl_intel_lp64",
-      "mkl_sequential",
-      "mkl_core"
+      "mkl_intel_thread",
+      "mkl_core",
+      "libiomp5md"
     }
   filter "system:linux"
     links {
       "mkl_intel_lp64",
-      "mkl_sequential",
+      "mkl_gnu_thread",
       "mkl_core",
+      "gomp",
       "pthread",
       "m",
       "dl"
     }
-  
   filter {}

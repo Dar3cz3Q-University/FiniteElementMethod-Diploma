@@ -10,10 +10,7 @@
 #include <iostream>
 #include <thread>
 
-#include <Eigen/Core>
 #include "gmsh.h"
-#include <omp.h>
-#include <mkl.h>
 
 namespace fem::core
 {
@@ -41,9 +38,10 @@ void Application::Initialize()
 	if (m_Options.numberOfThreads.has_value())
 		nThreads = m_Options.numberOfThreads.value();
 
-	omp_set_num_threads(nThreads);
-	Eigen::setNbThreads(nThreads);
-	mkl_set_num_threads(nThreads);
+	config::OMPConfig::SetNumThreads(nThreads);
+
+	config::MKLConfig::SetDynamic(false);
+	config::MKLConfig::SetNumThreads(nThreads);
 
 	LOG_INFO("Initialization completed");
 	LOG_INFO(m_Options.ToString());
@@ -72,7 +70,9 @@ ExitCode Application::Execute()
 	Initialize();
 
 	LOG_INFO("Application running...");
-	LOG_INFO("Using {} threads", omp_get_max_threads());
+
+	config::OMPConfig::PrintInfo();
+	config::MKLConfig::PrintInfo();
 
 	const auto& parsedConfig = config::loader::ConfigLoader::LoadFromFile(m_Options.configFilePath);
 
