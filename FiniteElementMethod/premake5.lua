@@ -3,9 +3,7 @@ project "App"
   language "C++"
   cppdialect "C++23"
 
-  defines {
-    "EIGEN_USE_THREADS"
-  }
+  defines { "EIGEN_USE_MKL_ALL" }
 
   targetdir (OutputDir .. "/%{prj.name}")
   objdir (IntermediateDir .. "/%{prj.name}")

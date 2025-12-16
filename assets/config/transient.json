@@ -1,9 +1,11 @@
 {
-  "mesh_path": "..\\assets\\mesh\\small.msh",
+  "mesh_path": "..\\assets\\mesh\\medium.msh",
   "problem": {
     "type": "transient",
-    "total_time": 5000,
-    "time_step": 5,
+    "total_time": 500,
+    "time_step": 50,
+    "save_history": true,
+    "save_stride": 1,
     "initial_conditions": {
       "uniform_temperature": 100
     }

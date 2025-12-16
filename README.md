@@ -16,7 +16,7 @@
 2. Install `vcpkg`:
   ```shell
     cd External/vcpkg
-    ./bootstrap-vcpkg.bat  # Windows
+    bootstrap-vcpkg.bat  # Windows
     ./bootstrap-vcpkg.sh   # Linux
   ```
 3. Run the setup script in [Scripts](/Scripts) directory,

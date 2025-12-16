@@ -4,6 +4,7 @@
     "type": "transient",
     "total_time": 500,
     "time_step": 50,
+    "save_history": false,
     "initial_conditions": {
       "uniform_temperature": 100
     }
