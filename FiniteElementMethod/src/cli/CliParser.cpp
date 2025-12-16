@@ -104,7 +104,7 @@ std::expected<void, CliError> CliParser::ExtractConfigFilePath(const cxxopts::Pa
 
 std::expected<void, CliError> CliParser::ExtractMetricsFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
 {
-	if (!result.count("metrics"))
+	if (result.count("metrics"))
 		config->metricsFilePath = result["metrics"].as<std::string>();
 
 	return {};
