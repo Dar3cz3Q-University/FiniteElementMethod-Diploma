@@ -5,11 +5,13 @@
 
 #include "logger/logger.h"
 
-#include <nlohmann/json.hpp>
+#include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <chrono>
 #include <iomanip>
+
+#include <nlohmann/json.hpp>
 
 // TODO: Use std::expected and fileio module
 // TODO: Use std::path instead of std::string
@@ -187,13 +189,10 @@ std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
 		return std::nullopt;
 	}
 
-	if (cache.hasCapacity)
+	if (cache.hasCapacity && !MatrixSerializer::LoadSparseMatrix(cacheDir + "/C.mtx", cache.C))
 	{
-		if (!MatrixSerializer::LoadSparseMatrix(cacheDir + "/C.mtx", cache.C))
-		{
-			LOG_ERROR("Failed to load matrix C");
-			return std::nullopt;
-		}
+		LOG_ERROR("Failed to load matrix C");
+		return std::nullopt;
 	}
 
 	if (!MatrixSerializer::LoadVector(cacheDir + "/P.bin", cache.P))
@@ -208,13 +207,10 @@ std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
 		return std::nullopt;
 	}
 
-	if (cache.hasCapacity)
+	if (cache.hasCapacity && cache.C.rows() != meta->matrixCRows || cache.C.cols() != meta->matrixCCols)
 	{
-		if (cache.C.rows() != meta->matrixCRows || cache.C.cols() != meta->matrixCCols)
-		{
-			LOG_ERROR("Matrix C dimensions mismatch!");
-			return std::nullopt;
-		}
+		LOG_ERROR("Matrix C dimensions mismatch!");
+		return std::nullopt;
 	}
 
 	if (cache.P.size() != meta->vectorPSize)
@@ -419,12 +415,12 @@ bool CacheManager::ValidateInputFiles(
 
 std::string CacheManager::GetCurrentTimestamp()
 {
-	auto now = std::chrono::system_clock::now();
-	auto time_t = std::chrono::system_clock::to_time_t(now);
+	using namespace std::chrono;
 
-	std::stringstream ss;
-	ss << std::put_time(std::localtime(&time_t), "%Y-%m-%d %H:%M:%S");
-	return ss.str();
+	const auto now = floor<seconds>(system_clock::now());
+	const auto zoned = zoned_time{ current_zone(), now };
+
+	return std::format("{:%Y-%m-%d %H:%M:%S}", zoned);
 }
 
 } // namespace fem::cache

@@ -51,7 +51,7 @@ std::optional<std::string> HashUtils::ComputeMultiFileHash(const std::vector<std
 	XXH64_reset(state, 0);
 
 	std::vector<std::string> sortedFiles = filenames;
-	std::sort(sortedFiles.begin(), sortedFiles.end());
+	std::ranges::sort(sortedFiles);
 
 	for (const auto& filename : sortedFiles)
 	{
