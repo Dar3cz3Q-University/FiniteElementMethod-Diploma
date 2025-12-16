@@ -100,7 +100,7 @@ public:
 		}
 		else
 		{
-			spdlog::info("  Status: Disabled (using Eigen native)");
+			LOG_INFO("  Status: Disabled (using Eigen native)");
 		}
 	}
 
