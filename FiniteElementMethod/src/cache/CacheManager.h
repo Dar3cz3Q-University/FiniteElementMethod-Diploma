@@ -7,6 +7,8 @@
 #include <optional>
 #include <Eigen/Sparse>
 
+// TODO: Save caches by hash
+// TODO: Add cache list and clear option
 namespace fem::cache
 {
 
