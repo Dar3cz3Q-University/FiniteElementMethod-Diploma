@@ -1,5 +1,5 @@
 {
-  "mesh_path": "..\\assets\\mesh\\small.msh",
+  "mesh_path": "..\\assets\\mesh\\medium.msh",
   "problem": {
     "type": "steady"
   },
