@@ -32,24 +32,16 @@ std::expected<QuadIntegrationData, IntegrationError> BuildQuadIntegrationData(In
 	out.nGauss = nGauss;
 	out.nPoints = nGauss * nGauss;
 
-	out.ksi.reserve(out.nPoints);
-	out.eta.reserve(out.nPoints);
-	out.weights.reserve(out.nPoints);
-
-	out.N.reserve(out.nPoints);
-	out.dN_dKsi.reserve(out.nPoints);
-	out.dN_dEta.reserve(out.nPoints);
-
 	int gpIndex = 0;
 	for (int i = 0; i < nGauss; i++) for (int j = 0; j < nGauss; j++)
 	{
-		const double ksi = points1D.at(i);
-		const double eta = points1D.at(j);
-		const double w = weights1D.at(i) * weights1D.at(j);
+		const double ksi = points1D[i];
+		const double eta = points1D[j];
+		const double w = weights1D[i] * weights1D[j];
 
-		out.ksi.push_back(ksi);
-		out.eta.push_back(eta);
-		out.weights.push_back(w);
+		out.ksi[gpIndex] = ksi;
+		out.eta[gpIndex] = eta;
+		out.weights[gpIndex] = w;
 
 		std::array<double, 4> Nvals = {
 			0.25 * (1.0 - ksi) * (1.0 - eta),
@@ -72,14 +64,25 @@ std::expected<QuadIntegrationData, IntegrationError> BuildQuadIntegrationData(In
 			0.25 * (1.0 - ksi)
 		};
 
-		out.N.push_back(Nvals);
-		out.dN_dKsi.push_back(dKsi);
-		out.dN_dEta.push_back(dEta);
+		out.N[gpIndex] = Nvals;
+		out.dN_dKsi[gpIndex] = dKsi;
+		out.dN_dEta[gpIndex] = dEta;
 
-		LOG_TRACE("IP = {}, ksi = {:.6f}, eta = {:.6f}, w = {:.6f}", gpIndex++, ksi, eta, w);
+		// Precompute N * N^T for capacity matrix
+		for (int a = 0; a < 4; a++)
+		{
+			for (int b = 0; b < 4; b++)
+			{
+				out.N_N_T[gpIndex][a][b] = Nvals[a] * Nvals[b];
+			}
+		}
+
+		LOG_TRACE("IP = {}, ksi = {:.6f}, eta = {:.6f}, w = {:.6f}", gpIndex, ksi, eta, w);
 		LOG_TRACE("dN/dKsi = [{:.6f}, {:.6f}, {:.6f}, {:.6f}]", dKsi[0], dKsi[1], dKsi[2], dKsi[3]);
 		LOG_TRACE("dN/dEta = [{:.6f}, {:.6f}, {:.6f}, {:.6f}]", dEta[0], dEta[1], dEta[2], dEta[3]);
 		LOG_TRACE("N = [{:.6f}, {:.6f}, {:.6f}, {:.6f}]", Nvals[0], Nvals[1], Nvals[2], Nvals[3]);
+
+		gpIndex++;
 	}
 
 	return out;

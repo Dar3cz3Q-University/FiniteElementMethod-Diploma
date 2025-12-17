@@ -118,17 +118,17 @@ ExitCode Application::Execute()
 
 		domain::GlobalMatrixBuilder matrixBuilder(*mesh, elementBuilder);
 
-		const auto& matrices = matrixBuilder.Build();
+		const auto& buildResult = matrixBuilder.Build();
 
-		if (!matrices)
+		if (!buildResult)
 		{
-			LOG_ERROR(matrices.error());
+			LOG_ERROR(buildResult.error());
 			return DomainError;
 		}
 
-		H = matrices->H;
-		C = matrices->C;
-		P = matrices->P;
+		H = buildResult->matrices.H;
+		C = buildResult->matrices.C;
+		P = buildResult->matrices.P;
 
 		cache::CacheManager::SaveTransientSystem("cache", H, C, P, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
 	}

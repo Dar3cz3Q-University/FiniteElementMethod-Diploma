@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AssemblyStats.h"
 #include "BoundaryMatrices.h"
 #include "ElementMatrices.h"
 #include "ElementMatrixBuilder.h"

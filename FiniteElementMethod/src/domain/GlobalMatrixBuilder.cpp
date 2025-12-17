@@ -1,6 +1,7 @@
 #include "GlobalMatrixBuilder.h"
 
 #include "logger/logger.h"
+#include "utils/utils.h"
 
 #include <atomic>
 #include <iostream>
@@ -10,9 +11,12 @@
 namespace fem::domain
 {
 
-std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() const
+std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Build() const
 {
 	LOG_INFO("Calculating H, C matrices and P vector");
+
+	auto totalStart = Now();
+	AssemblyStats stats;
 
 	const auto numberOfNodes = m_Mesh.GetNodesCount();
 	const auto& quads = m_Mesh.GetQuads();
@@ -29,7 +33,10 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 
 	std::atomic<int> processedElements{ 0 };
 	std::atomic<int> lastLoggedPercent{ 0 };
+	std::atomic<bool> hasError{ false };
 	const int totalElements = static_cast<int>(numberOfElements);
+
+	auto elementStart = Now();
 
 #pragma omp parallel
 	{
@@ -37,12 +44,20 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 		TripletsVector localTripletsC;
 		Vec localP = Vec::Zero(numberOfNodes);
 
-#pragma omp for nowait
-		for (int i = 0; i < numberOfElements; i++)
+#pragma omp for schedule(dynamic, 64)
+		for (int i = 0; i < totalElements; i++)
 		{
+			if (hasError.load(std::memory_order_relaxed)) continue;
+
 			const auto& element = quads.at(i);
 			auto res = m_Builder.BuildQuadMatrices(m_Mesh, element);
-			if (!res) continue; // TODO: Handle error
+
+			if (!res)
+			{
+				hasError.store(true, std::memory_order_relaxed);
+				LOG_ERROR("Failed to build matrices for element {}", i);
+				continue;
+			}
 
 			AssembleQuadElement(element, *res, localTripletsH, localTripletsC, localP);
 
@@ -60,16 +75,35 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 			}
 		}
 
-#pragma omp critical
+#pragma omp critical(merge_H)
 		{
 			tripletsH.insert(tripletsH.end(), localTripletsH.begin(), localTripletsH.end());
+		}
+
+#pragma omp critical(merge_C)
+		{
 			tripletsC.insert(tripletsC.end(), localTripletsC.begin(), localTripletsC.end());
+		}
+
+#pragma omp critical(merge_P)
+		{
 			globalP += localP;
 		}
 	}
 
+	if (hasError.load())
+	{
+		LOG_ERROR("Element assembly failed");
+		return std::unexpected(-1);
+	}
+
+	auto elementEnd = Now();
+	stats.elementAssemblyTimeMs = ElapsedMs(elementStart, elementEnd);
+
 	// TODO: Check how boundary conditions are handled
 	// TODO: Display progress for lines
+	auto boundaryStart = Now();
+
 	for (auto& line : lines)
 	{
 		const auto& res = m_Builder.BuildLineBoundaryMatrices(m_Mesh, line);
@@ -78,20 +112,37 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 		AssembleLineElement(line, *res, tripletsH, globalP);
 	}
 
+	auto boundaryEnd = Now();
+	stats.boundaryAssemblyTimeMs = ElapsedMs(boundaryStart, boundaryEnd);
+
 	GlobalMatrices out;
 	out.H.resize(numberOfNodes, numberOfNodes);
 	out.C.resize(numberOfNodes, numberOfNodes);
 	out.P = globalP;
 
+	auto tripletStart = Now();
+
 	out.H.setFromTriplets(tripletsH.begin(), tripletsH.end());
 	out.C.setFromTriplets(tripletsC.begin(), tripletsC.end());
+
+	auto tripletEnd = Now();
+	stats.tripletToSparseTimeMs = ElapsedMs(tripletStart, tripletEnd);
+
+	auto totalEnd = Now();
+	stats.totalAssemblyTimeMs = ElapsedMs(totalStart, totalEnd);
 
 	LOG_INFO("Matrix H statistics:");
 	LOG_INFO("  Size: {} x {}", out.H.rows(), out.H.cols());
 	LOG_INFO("  Non-zeros: {}", out.H.nonZeros());
 	LOG_INFO("  Fill ratio: {:.4f}%", 100.0 * out.H.nonZeros() / (out.H.rows() * out.H.cols()));
 
-	return out;
+	LOG_INFO("Assembly timing:");
+	LOG_INFO("  Element assembly: {:.2f} ms", stats.elementAssemblyTimeMs);
+	LOG_INFO("  Boundary assembly: {:.2f} ms", stats.boundaryAssemblyTimeMs);
+	LOG_INFO("  Triplet to sparse: {:.2f} ms", stats.tripletToSparseTimeMs);
+	LOG_INFO("  Total: {:.2f} ms", stats.totalAssemblyTimeMs);
+
+	return GlobalMatrixBuildResult{ .matrices = std::move(out), .stats = stats };
 }
 
 void GlobalMatrixBuilder::AssembleQuadElement(const mesh::model::Quad& element, const ElementMatrices& res, TripletsVector& localTripletsH, TripletsVector& localTripletsC, Vec& localP) const

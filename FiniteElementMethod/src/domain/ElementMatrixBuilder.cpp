@@ -12,7 +12,7 @@ namespace fem::domain
 
 std::expected<ElementMatrices, int> ElementMatrixBuilder::BuildQuadMatrices(const mesh::model::Mesh& mesh, const mesh::model::Quad& quad) const
 {
-	auto schema = integration::IntegrationSchema::Gauss3;
+	constexpr auto schema = integration::IntegrationSchema::Gauss3;
 
 	LOG_TRACE(
 		"Assembling element matrices for quad id={} nodes=[{}, {}, {}, {}] using Gauss{}",
@@ -28,75 +28,77 @@ std::expected<ElementMatrices, int> ElementMatrixBuilder::BuildQuadMatrices(cons
 	out.C.setZero();
 	out.P.setZero();
 
-	// TODO: Create mapper from Node to Vec2
-	std::array<Vec2, 4> nodes{};
-	{
-		std::size_t i = 0;
-		for (const auto& nodeID : quad.nodeIDs)
-		{
-			const auto& node = mesh.GetNode(nodeID);
-			nodes[i++] = Vec2(node.x, node.y);
+	// Precompute material constants
+	const double k = m_Material.conductivity;
+	const double rhoC = m_Material.density * m_Material.specificHeat;
 
-			LOG_TRACE(
-				"Node local {} (id={}): x={:.6f}, y={:.6f}",
-				i, nodeID, node.x, node.y
-			);
-		}
+	// Extract node coordinates
+	std::array<double, 4> nodeX{};
+	std::array<double, 4> nodeY{};
+	for (int i = 0; i < 4; i++)
+	{
+		const auto& node = mesh.GetNode(quad.nodeIDs[i]);
+		nodeX[i] = node.x;
+		nodeY[i] = node.y;
+
+		LOG_TRACE("Node local {} (id={}): x={:.6f}, y={:.6f}", i, quad.nodeIDs[i], node.x, node.y);
 	}
 
-	for (int i = 0; i < quadData.nPoints; i++)
+	const int nPoints = quadData.nPoints;
+	for (int i = 0; i < nPoints; i++)
 	{
-		const auto& dN_dKsi = quadData.dN_dKsi.at(i);
-		const auto& dN_dEta = quadData.dN_dEta.at(i);
-		const auto ksi = quadData.ksi.at(i);
-		const auto eta = quadData.eta.at(i);
-		const auto& N = quadData.N.at(i);
-		const auto& w = quadData.weights.at(i);
+		const auto& dN_dKsi = quadData.dN_dKsi[i];
+		const auto& dN_dEta = quadData.dN_dEta[i];
+		const auto& N_N_T = quadData.N_N_T[i];
+		const double w = quadData.weights[i];
 
-		LOG_TRACE(
-			"IP={}: ksi={:.6f}, eta={:.6f}, w={:.6f}",
-			i, ksi, eta, w
-		);
+		LOG_TRACE("IP={}: ksi={:.6f}, eta={:.6f}, w={:.6f}", i, quadData.ksi[i], quadData.eta[i], w);
 
-		Mat2 J = Mat2::Zero();
-
-		// Jacobian
-		for (std::size_t a = 0; a < nodes.size(); a++)
+		// Compute Jacobian components directly
+		double J00 = 0.0, J01 = 0.0, J10 = 0.0, J11 = 0.0;
+		for (int a = 0; a < 4; a++)
 		{
-			J(0, 0) += dN_dKsi.at(a) * nodes.at(a).x();
-			J(0, 1) += dN_dEta.at(a) * nodes.at(a).x();
-			J(1, 0) += dN_dKsi.at(a) * nodes.at(a).y();
-			J(1, 1) += dN_dEta.at(a) * nodes.at(a).y();
+			J00 += dN_dKsi[a] * nodeX[a];
+			J01 += dN_dEta[a] * nodeX[a];
+			J10 += dN_dKsi[a] * nodeY[a];
+			J11 += dN_dEta[a] * nodeY[a];
 		}
 
-		double detJ = J.determinant();
-		Mat2 invJ = J.inverse();
+		const double detJ = J00 * J11 - J01 * J10;
+		const double invDetJ = 1.0 / detJ;
 
-		LOG_TRACE("GP {}: J =\n{}", i, EigenToString(J));
-		LOG_TRACE("GP {}: invJ =\n{}", i, EigenToString(invJ));
+		// Inverse Jacobian components
+		const double invJ00 = J11 * invDetJ;
+		const double invJ01 = -J01 * invDetJ;
+		const double invJ10 = -J10 * invDetJ;
+		const double invJ11 = J00 * invDetJ;
+
 		LOG_TRACE("GP {}: detJ = {:.6e}", i, detJ);
 
-		// Derivatives
-		std::array<Vec2, 4> gradN{};
-		for (std::size_t a = 0; a < nodes.size(); a++)
+		// Compute gradients in physical coordinates
+		std::array<double, 4> dN_dx{};
+		std::array<double, 4> dN_dy{};
+		for (int a = 0; a < 4; a++)
 		{
-			Vec2 gradN_local(dN_dKsi.at(a), dN_dEta.at(a));
-			gradN[a] = invJ.transpose() * gradN_local;
+			dN_dx[a] = invJ00 * dN_dKsi[a] + invJ10 * dN_dEta[a];
+			dN_dy[a] = invJ01 * dN_dKsi[a] + invJ11 * dN_dEta[a];
 
-			LOG_TRACE("dN/dx = {}, dN/dy = {}", gradN[a].x(), gradN[a].y());
+			LOG_TRACE("dN/dx = {}, dN/dy = {}", dN_dx[a], dN_dy[a]);
 		}
 
-		// Building H & C matrix
-		for (std::size_t a = 0; a < nodes.size(); a++)
-		{
-			for (std::size_t b = 0; b < nodes.size(); b++)
-			{
-				double gradDot = gradN[a].dot(gradN[b]);
-				out.H(a, b) += m_Material.conductivity * gradDot * detJ * w;
+		// Precompute common factor
+		const double detJ_w = detJ * w;
+		const double k_detJ_w = k * detJ_w;
+		const double rhoC_detJ_w = rhoC * detJ_w;
 
-				double Na = N[a];
-				double Nb = N[b];
-				out.C(a, b) += m_Material.density * m_Material.specificHeat * Na * Nb * detJ * w;
+		// Build H and C matrices
+		for (int a = 0; a < 4; a++)
+		{
+			for (int b = 0; b < 4; b++)
+			{
+				const double gradDot = dN_dx[a] * dN_dx[b] + dN_dy[a] * dN_dy[b];
+				out.H(a, b) += k_detJ_w * gradDot;
+				out.C(a, b) += rhoC_detJ_w * N_N_T[a][b];
 			}
 		}
 	}
