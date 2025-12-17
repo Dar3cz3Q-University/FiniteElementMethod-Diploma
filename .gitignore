@@ -5,6 +5,9 @@ FiniteElementMethod/output
 # CSV Files
 *.csv
 
+# JSON Files
+*.json
+
 # Builds
 build/
 
