@@ -11,6 +11,7 @@ enum class ExitCode : int
 	MeshError,
 	DomainError,
 	MetricsExportError,
+	VTKExportError,
 	SolverError,
 };
 

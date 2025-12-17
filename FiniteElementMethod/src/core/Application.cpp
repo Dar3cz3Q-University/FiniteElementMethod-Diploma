@@ -8,6 +8,7 @@
 #include "mesh/mesh.h"
 #include "solver/solver.h"
 
+#include <filesystem>
 #include <iostream>
 #include <thread>
 
@@ -15,6 +16,8 @@
 
 namespace fem::core
 {
+
+namespace fs = std::filesystem;
 
 Application::Application(const ApplicationOptions& options)
 	: m_Options(options)
@@ -85,6 +88,17 @@ ExitCode Application::Execute()
 
 	const auto& config = *parsedConfig;
 
+	mesh::provider::MeshProvider provider{};
+	const auto& meshResult = provider.LoadMesh(config.meshPath);
+
+	if (!meshResult)
+	{
+		LOG_ERROR(meshResult.error().ToString());
+		return MeshError;
+	}
+
+	const auto& mesh = *meshResult;
+
 	SpMat H, C;
 	Vec P;
 
@@ -113,21 +127,12 @@ ExitCode Application::Execute()
 	{
 		LOG_INFO("Assembling system...");
 
-		mesh::provider::MeshProvider provider{};
-		const auto& mesh = provider.LoadMesh(config.meshPath);
-
-		if (!mesh)
-		{
-			LOG_ERROR(mesh.error().ToString());
-			return MeshError;
-		}
-
 		domain::ElementMatrixBuilder elementBuilder(
 			config.material,
 			config.boundaryCondition // TODO: Use vector of BCs
 		);
 
-		domain::GlobalMatrixBuilder matrixBuilder(*mesh, elementBuilder);
+		domain::GlobalMatrixBuilder matrixBuilder(mesh, elementBuilder);
 
 		const auto& buildResult = matrixBuilder.Build();
 
@@ -185,7 +190,36 @@ ExitCode Application::Execute()
 		cache::CacheManager::PrintCacheInfo(cache::CACHE_ROOT, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
 	}
 
-	// TODO: Export solution to .vtk files
+	// TODO: Extract output paths to config
+	if (solution->isSteady())
+	{
+		fs::path vtkPath = "output/solution.vtk";
+		fs::create_directories(vtkPath.parent_path());
+
+		auto vtkResult = fileio::VTKExporter::ExportSteady(vtkPath, mesh, solution->getFinalSolution());
+		if (!vtkResult)
+		{
+			LOG_ERROR(vtkResult.error().ToString());
+			return VTKExportError;
+		}
+	}
+	else
+	{
+		const auto& transient = solution->getTransient();
+		fs::path outputDir = "output";
+
+		auto vtkResult = fileio::VTKExporter::ExportTransient(
+			outputDir,
+			mesh,
+			transient.temperatures,
+			transient.timeSteps);
+
+		if (!vtkResult)
+		{
+			LOG_ERROR(vtkResult.error().ToString());
+			return VTKExportError;
+		}
+	}
 
 	return Success;
 }
