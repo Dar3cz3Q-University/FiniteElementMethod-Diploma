@@ -5,6 +5,7 @@
 #include "utils/utils.h"
 
 #include <Eigen/PardisoSupport>
+#include <Eigen/Sparse>
 
 namespace fem::solver::linear
 {
@@ -41,7 +42,12 @@ std::expected<LinearSolverResult, SolverError> SparseLUSolver::Solve(const SpMat
 
 	auto factorStart = Now();
 
+#ifdef FEM_USE_SEQUENTIAL_SOLVER
+	Eigen::SparseLU<SpMat, config::DefaultOrderingType> solver;
+#else
 	Eigen::PardisoLU<SpMat> solver;
+#endif
+
 	solver.compute(A);
 
 	auto factorEnd = Now();

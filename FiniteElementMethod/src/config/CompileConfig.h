@@ -9,7 +9,9 @@
 namespace fem::config
 {
 
-//#define FEM_USE_ROW_MAJOR  // Uncomment for CSR format
+//#define FEM_USE_SEQUENTIAL_SOLVER // Uncomment for sequential solver
+
+//#define FEM_USE_ROW_MAJOR  // Uncomment for CSR format FEM_USE_SEQUENTIAL_SOLVER must be enabled
 
 #ifdef FEM_USE_ROW_MAJOR
 constexpr int StorageOrder = Eigen::RowMajor;
@@ -19,8 +21,8 @@ constexpr int StorageOrder = Eigen::ColMajor;
 constexpr const char* StorageOrderName = "CSC (ColMajor)";
 #endif
 
-//#define FEM_USE_NATURAL_ORDERING  // Uncomment for no reordering
-//#define FEM_USE_COLAMD_ORDERING   // Uncomment for COLAMD
+//#define FEM_USE_NATURAL_ORDERING  // Uncomment for no reordering. FEM_USE_SEQUENTIAL_SOLVER must be enabled
+//#define FEM_USE_COLAMD_ORDERING   // Uncomment for COLAMD FEM_USE_SEQUENTIAL_SOLVER must be enabled
 
 #if defined(FEM_USE_NATURAL_ORDERING)
 using DefaultOrderingType = Eigen::NaturalOrdering<int>;

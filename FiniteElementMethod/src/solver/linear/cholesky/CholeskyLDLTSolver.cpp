@@ -5,6 +5,7 @@
 #include "utils/utils.h"
 
 #include <Eigen/PardisoSupport>
+#include <Eigen/Sparse>
 
 namespace fem::solver::linear
 {
@@ -41,7 +42,12 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 
 	auto factorStart = Now();
 
+#ifdef FEM_USE_SEQUENTIAL_SOLVER
+	Eigen::SimplicialLDLT<SpMat, Eigen::Lower, config::DefaultOrderingType> solver;
+#else
 	Eigen::PardisoLDLT<SpMat> solver;
+#endif
+
 	solver.compute(A);
 
 	auto factorEnd = Now();
