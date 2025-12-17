@@ -85,22 +85,33 @@ ExitCode Application::Execute()
 
 	const auto& config = *parsedConfig;
 
-	auto cachedSystem = cache::CacheManager::LoadSystem("cache", m_Options.configFilePath.string(), parsedConfig->meshPath.string(), true);
-
 	SpMat H, C;
 	Vec P;
 
-	if (cachedSystem)
-	{
-		H = std::move(cachedSystem->H);
-		C = std::move(cachedSystem->C);
-		P = std::move(cachedSystem->P);
+	bool cacheHit = false;
 
-		LOG_INFO("System loaded from cache");
+	if (m_Options.useCache)
+	{
+		auto cachedSystem = cache::CacheManager::LoadSystem(cache::CACHE_ROOT, parsedConfig->meshPath.string(), m_Options.configFilePath.string(), true);
+
+		if (cachedSystem)
+		{
+			H = std::move(cachedSystem->H);
+			C = std::move(cachedSystem->C);
+			P = std::move(cachedSystem->P);
+
+			LOG_INFO("System loaded from cache");
+			cacheHit = true;
+		}
 	}
 	else
 	{
-		LOG_INFO("Cache miss - assembling system...");
+		LOG_INFO("Cache disabled");
+	}
+
+	if (!cacheHit)
+	{
+		LOG_INFO("Assembling system...");
 
 		mesh::provider::MeshProvider provider{};
 		const auto& mesh = provider.LoadMesh(config.meshPath);
@@ -130,7 +141,10 @@ ExitCode Application::Execute()
 		C = buildResult->matrices.C;
 		P = buildResult->matrices.P;
 
-		cache::CacheManager::SaveTransientSystem("cache", H, C, P, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
+		if (m_Options.useCache)
+		{
+			cache::CacheManager::SaveTransientSystem(cache::CACHE_ROOT, H, C, P, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
+		}
 	}
 
 	auto solverConfig = solver::FEMSolverConfig{
@@ -166,7 +180,10 @@ ExitCode Application::Execute()
 		}
 	}
 
-	cache::CacheManager::PrintCacheInfo("cache");
+	if (m_Options.useCache)
+	{
+		cache::CacheManager::PrintCacheInfo(cache::CACHE_ROOT, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
+	}
 
 	// TODO: Export solution to .vtk files
 

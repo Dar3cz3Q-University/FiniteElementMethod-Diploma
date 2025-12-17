@@ -13,6 +13,7 @@ inline ApplicationOptions GetSteadyTest()
 	opts.configFilePath = "..\\assets\\config\\steady.json";
 	opts.metricsFilePath = "..\\metrics.csv";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
+	opts.useCache = false;
 	opts.numberOfThreads = 16;
 	return opts;
 }

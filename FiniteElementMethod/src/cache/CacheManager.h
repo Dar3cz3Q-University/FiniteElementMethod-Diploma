@@ -7,12 +7,10 @@
 #include <optional>
 #include <Eigen/Sparse>
 
-// TODO: Save caches by hash
-// TODO: Add cache list and clear option
 namespace fem::cache
 {
 
-auto constexpr CACHE_ROOT = "cache";
+inline constexpr auto CACHE_ROOT = "cache";
 
 class CacheManager
 {
@@ -46,14 +44,14 @@ public:
 	};
 
 	static bool SaveSteadySystem(
-		const std::string& cacheDir,
+		const std::string& cacheRoot,
 		const SpMat& H,
 		const Vec& P,
 		const std::string& meshFile,
 		const std::string& configFile);
 
 	static bool SaveTransientSystem(
-		const std::string& cacheDir,
+		const std::string& cacheRoot,
 		const SpMat& H,
 		const SpMat& C,
 		const Vec& P,
@@ -61,29 +59,31 @@ public:
 		const std::string& configFile);
 
 	static std::optional<SystemCache> LoadSystem(
-		const std::string& cacheDir,
+		const std::string& cacheRoot,
 		const std::string& meshFile,
 		const std::string& configFile,
 		bool strictValidation = true);
 
 	static bool IsValidCache(
-		const std::string& cacheDir,
+		const std::string& cacheRoot,
 		const std::string& meshFile,
 		const std::string& configFile);
 
-	static bool ClearCache(const std::string& cacheDir);
+	static bool ClearCache(const std::string& cacheRoot);
 
-	static void PrintCacheInfo(const std::string& cacheDir);
+	static bool ClearAllCaches(const std::string& cacheRoot);
+
+	static void PrintCacheInfo(const std::string& cacheRoot, const std::string& meshFile, const std::string& configFile);
+
+	static void ListCaches(const std::string& cacheRoot);
 
 	static std::optional<CacheMetadata> GetMetadata(const std::string& cacheDir);
 
 private:
+	static std::string GetCacheDir(const std::string& cacheRoot, const std::string& meshFile, const std::string& configFile);
 	static bool SaveMetadata(const std::string& filename, const CacheMetadata& meta);
 	static std::optional<CacheMetadata> LoadMetadata(const std::string& filename);
-	static bool ValidateInputFiles(
-		const std::string& meshFile,
-		const std::string& configFile,
-		const CacheMetadata& meta);
+	static bool ValidateInputFiles(const std::string& meshFile, const std::string& configFile, const CacheMetadata& meta);
 	static std::string GetCurrentTimestamp();
 
 	CacheManager() = delete;

@@ -12,20 +12,38 @@
 
 #include <nlohmann/json.hpp>
 
-// TODO: Use std::expected and fileio module
-// TODO: Use std::path instead of std::string
 namespace fem::cache
 {
 
 namespace fs = std::filesystem;
 
+std::string CacheManager::GetCacheDir(const std::string& cacheRoot, const std::string& meshFile, const std::string& configFile)
+{
+	auto combinedHash = HashUtils::ComputeMultiFileHash({ meshFile, configFile });
+	if (!combinedHash)
+	{
+		return "";
+	}
+
+	// Use first 16 characters of hash for directory name
+	std::string shortHash = combinedHash->substr(0, 16);
+	return cacheRoot + "/" + shortHash;
+}
+
 bool CacheManager::SaveSteadySystem(
-	const std::string& cacheDir,
+	const std::string& cacheRoot,
 	const SpMat& H,
 	const Vec& P,
 	const std::string& meshFile,
 	const std::string& configFile)
 {
+	std::string cacheDir = GetCacheDir(cacheRoot, meshFile, configFile);
+	if (cacheDir.empty())
+	{
+		LOG_ERROR("Failed to compute cache directory path");
+		return false;
+	}
+
 	LOG_INFO("Saving steady-state system to cache: {}", cacheDir);
 	fs::create_directories(cacheDir);
 
@@ -73,20 +91,27 @@ bool CacheManager::SaveSteadySystem(
 	}
 
 	LOG_INFO("Cache saved successfully");
-	LOG_INFO("  Combined hash: {}", meta.combinedHash);
+	LOG_INFO("  Hash: {}", meta.combinedHash.substr(0, 16));
 	LOG_INFO("  Matrix H: {}x{}, {} nonzeros", meta.matrixHRows, meta.matrixHCols, meta.matrixHNonzeros);
 
 	return true;
 }
 
 bool CacheManager::SaveTransientSystem(
-	const std::string& cacheDir,
+	const std::string& cacheRoot,
 	const SpMat& H,
 	const SpMat& C,
 	const Vec& P,
 	const std::string& meshFile,
 	const std::string& configFile)
 {
+	std::string cacheDir = GetCacheDir(cacheRoot, meshFile, configFile);
+	if (cacheDir.empty())
+	{
+		LOG_ERROR("Failed to compute cache directory path");
+		return false;
+	}
+
 	LOG_INFO("Saving transient system to cache: {}", cacheDir);
 	fs::create_directories(cacheDir);
 
@@ -139,7 +164,7 @@ bool CacheManager::SaveTransientSystem(
 	}
 
 	LOG_INFO("Cache saved successfully");
-	LOG_INFO("  Combined hash: {}", meta.combinedHash);
+	LOG_INFO("  Hash: {}", meta.combinedHash.substr(0, 16));
 	LOG_INFO("  Matrix H: {}x{}, {} nonzeros", meta.matrixHRows, meta.matrixHCols, meta.matrixHNonzeros);
 	LOG_INFO("  Matrix C: {}x{}, {} nonzeros", meta.matrixCRows, meta.matrixCCols, meta.matrixCNonzeros);
 
@@ -147,11 +172,18 @@ bool CacheManager::SaveTransientSystem(
 }
 
 std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
-	const std::string& cacheDir,
+	const std::string& cacheRoot,
 	const std::string& meshFile,
 	const std::string& configFile,
 	bool strictValidation)
 {
+	std::string cacheDir = GetCacheDir(cacheRoot, meshFile, configFile);
+	if (cacheDir.empty())
+	{
+		LOG_TRACE("Failed to compute cache directory path");
+		return std::nullopt;
+	}
+
 	std::string metadataPath = cacheDir + "/metadata.json";
 	if (!fs::exists(metadataPath))
 	{
@@ -167,7 +199,7 @@ std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
 	}
 
 	LOG_INFO("Found cache from: {}", meta->cacheCreatedTime);
-	LOG_INFO("  Combined hash: {}", meta->combinedHash);
+	LOG_INFO("  Hash: {}", meta->combinedHash.substr(0, 16));
 
 	if (strictValidation)
 	{
@@ -206,7 +238,7 @@ std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
 		return std::nullopt;
 	}
 
-	if (cache.hasCapacity && cache.C.rows() != meta->matrixCRows || cache.C.cols() != meta->matrixCCols)
+	if (cache.hasCapacity && (cache.C.rows() != meta->matrixCRows || cache.C.cols() != meta->matrixCCols))
 	{
 		LOG_ERROR("Matrix C dimensions mismatch!");
 		return std::nullopt;
@@ -223,10 +255,16 @@ std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
 }
 
 bool CacheManager::IsValidCache(
-	const std::string& cacheDir,
+	const std::string& cacheRoot,
 	const std::string& meshFile,
 	const std::string& configFile)
 {
+	std::string cacheDir = GetCacheDir(cacheRoot, meshFile, configFile);
+	if (cacheDir.empty())
+	{
+		return false;
+	}
+
 	auto meta = LoadMetadata(cacheDir + "/metadata.json");
 	if (!meta)
 	{
@@ -236,17 +274,17 @@ bool CacheManager::IsValidCache(
 	return ValidateInputFiles(meshFile, configFile, *meta);
 }
 
-bool CacheManager::ClearCache(const std::string& cacheDir)
+bool CacheManager::ClearCache(const std::string& cacheRoot)
 {
-	if (!fs::exists(cacheDir))
+	if (!fs::exists(cacheRoot))
 	{
 		return true;
 	}
 
 	try
 	{
-		fs::remove_all(cacheDir);
-		LOG_INFO("Cache cleared: {}", cacheDir);
+		fs::remove_all(cacheRoot);
+		LOG_INFO("Cache cleared: {}", cacheRoot);
 		return true;
 	}
 	catch (const std::exception& e)
@@ -256,8 +294,44 @@ bool CacheManager::ClearCache(const std::string& cacheDir)
 	}
 }
 
-void CacheManager::PrintCacheInfo(const std::string& cacheDir)
+bool CacheManager::ClearAllCaches(const std::string& cacheRoot)
 {
+	if (!fs::exists(cacheRoot))
+	{
+		LOG_INFO("No cache directory found");
+		return true;
+	}
+
+	try
+	{
+		size_t count = 0;
+		for (const auto& entry : fs::directory_iterator(cacheRoot))
+		{
+			if (entry.is_directory())
+			{
+				fs::remove_all(entry.path());
+				count++;
+			}
+		}
+		LOG_INFO("Cleared {} cache entries from: {}", count, cacheRoot);
+		return true;
+	}
+	catch (const std::exception& e)
+	{
+		LOG_ERROR("Failed to clear caches: {}", e.what());
+		return false;
+	}
+}
+
+void CacheManager::PrintCacheInfo(const std::string& cacheRoot, const std::string& meshFile, const std::string& configFile)
+{
+	std::string cacheDir = GetCacheDir(cacheRoot, meshFile, configFile);
+	if (cacheDir.empty())
+	{
+		LOG_INFO("Failed to compute cache directory path");
+		return;
+	}
+
 	auto meta = GetMetadata(cacheDir);
 	if (!meta)
 	{
@@ -294,6 +368,48 @@ void CacheManager::PrintCacheInfo(const std::string& cacheDir)
 		}
 	}
 	LOG_INFO("  Cache size: {:.2f} MB", cacheSize / (1024.0 * 1024.0));
+}
+
+void CacheManager::ListCaches(const std::string& cacheRoot)
+{
+	if (!fs::exists(cacheRoot))
+	{
+		LOG_INFO("No cache directory found at: {}", cacheRoot);
+		return;
+	}
+
+	LOG_INFO("Cached systems in {}:", cacheRoot);
+
+	size_t totalSize = 0;
+	size_t count = 0;
+
+	for (const auto& entry : fs::directory_iterator(cacheRoot))
+	{
+		if (!entry.is_directory()) continue;
+
+		auto meta = GetMetadata(entry.path().string());
+		if (!meta) continue;
+
+		size_t dirSize = 0;
+		for (const auto& file : fs::recursive_directory_iterator(entry.path()))
+		{
+			if (file.is_regular_file())
+			{
+				dirSize += file.file_size();
+			}
+		}
+
+		LOG_INFO("  [{}] {} - {}x{} matrix, {:.2f} MB",
+			entry.path().filename().string(),
+			meta->cacheCreatedTime,
+			meta->matrixHRows, meta->matrixHCols,
+			dirSize / (1024.0 * 1024.0));
+
+		totalSize += dirSize;
+		count++;
+	}
+
+	LOG_INFO("Total: {} caches, {:.2f} MB", count, totalSize / (1024.0 * 1024.0));
 }
 
 std::optional<CacheManager::CacheMetadata> CacheManager::GetMetadata(const std::string& cacheDir)

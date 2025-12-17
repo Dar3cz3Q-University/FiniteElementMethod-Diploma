@@ -26,7 +26,8 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 		("t,threads", "Number of threads (default: hardware concurrency)",
 			cxxopts::value<std::size_t>())
 		("s,solver", GenerateSolverHelpText(),
-			cxxopts::value<std::string>()->default_value("cholesky"));
+			cxxopts::value<std::string>()->default_value("cholesky"))
+		("no-cache", "Disable matrix caching");
 
 	cxxopts::ParseResult result;
 	try
@@ -61,6 +62,9 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 		return std::unexpected(res.error());
 
 	if (auto res = ExtractSolverType(result, &config); !res)
+		return std::unexpected(res.error());
+
+	if (auto res = ExtractCacheEnabled(result, &config); !res)
 		return std::unexpected(res.error());
 
 	return config;
@@ -132,6 +136,14 @@ std::expected<void, CliError> CliParser::ExtractSolverType(const cxxopts::ParseR
 		);
 
 	config->LinearSolverType = *solverType;
+
+	return {};
+}
+
+std::expected<void, CliError> CliParser::ExtractCacheEnabled(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	if (result.count("no-cache"))
+		config->useCache = false;
 
 	return {};
 }

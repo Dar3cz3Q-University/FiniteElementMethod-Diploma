@@ -26,6 +26,7 @@ private:
 	static std::expected<void, CliError> ExtractMetricsFilePath(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 	static std::expected<void, CliError> ExtractThreadsNumber(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 	static std::expected<void, CliError> ExtractSolverType(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
+	static std::expected<void, CliError> ExtractCacheEnabled(const cxxopts::ParseResult& result, core::ApplicationOptions* config);
 };
 
 } // namespace fem::cli
