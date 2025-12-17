@@ -1,3 +1,7 @@
+# Outputs
+FiniteElementMethod/cache
+FiniteElementMethod/output
+
 # CSV Files
 *.csv
 
