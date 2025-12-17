@@ -101,6 +101,7 @@ ExitCode Application::Execute()
 
 	SpMat H, C;
 	Vec P;
+	std::optional<domain::AssemblyStats> assemblyStats;
 
 	bool cacheHit = false;
 
@@ -145,6 +146,7 @@ ExitCode Application::Execute()
 		H = buildResult->matrices.H;
 		C = buildResult->matrices.C;
 		P = buildResult->matrices.P;
+		assemblyStats = buildResult->stats;
 
 		if (m_Options.useCache)
 		{
@@ -173,10 +175,13 @@ ExitCode Application::Execute()
 
 	if (m_Options.metricsFilePath.has_value())
 	{
-		const auto& metricsExported = fileio::StatsExporter::Export(
-			m_Options.metricsFilePath.value(),
-			solver::linear::LinearSolverTypeToString(m_Options.LinearSolverType),
-			solution->stats);
+		fileio::FullMetrics metrics{
+			.solverName = std::string(solver::linear::LinearSolverTypeToString(m_Options.LinearSolverType)),
+			.solverStats = solution->stats,
+			.assemblyStats = assemblyStats
+		};
+
+		auto metricsExported = fileio::StatsExporter::Export(m_Options.metricsFilePath.value(), metrics);
 
 		if (!metricsExported)
 		{

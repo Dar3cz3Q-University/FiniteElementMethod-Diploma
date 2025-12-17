@@ -9,9 +9,17 @@
 namespace fem::config
 {
 
+// ============================================================================
+// Solver Configuration
+// ============================================================================
+
 //#define FEM_USE_SEQUENTIAL_SOLVER // Uncomment for sequential solver
 
-//#define FEM_USE_ROW_MAJOR  // Uncomment for CSR format FEM_USE_SEQUENTIAL_SOLVER must be enabled
+// ============================================================================
+// Storage Format Configuration
+// ============================================================================
+
+//#define FEM_USE_ROW_MAJOR // Uncomment for CSR format
 
 #ifdef FEM_USE_ROW_MAJOR
 constexpr int StorageOrder = Eigen::RowMajor;
@@ -21,8 +29,18 @@ constexpr int StorageOrder = Eigen::ColMajor;
 constexpr const char* StorageOrderName = "CSC (ColMajor)";
 #endif
 
-//#define FEM_USE_NATURAL_ORDERING  // Uncomment for no reordering. FEM_USE_SEQUENTIAL_SOLVER must be enabled
-//#define FEM_USE_COLAMD_ORDERING   // Uncomment for COLAMD FEM_USE_SEQUENTIAL_SOLVER must be enabled
+// ============================================================================
+// Reordering Configuration (only for sequential solver)
+// ============================================================================
+
+//#define FEM_USE_NATURAL_ORDERING // No reordering. Requires FEM_USE_SEQUENTIAL_SOLVER
+//#define FEM_USE_COLAMD_ORDERING  // COLAMD reordering. Requires FEM_USE_SEQUENTIAL_SOLVER
+
+#if (defined(FEM_USE_NATURAL_ORDERING) || defined(FEM_USE_COLAMD_ORDERING)) && !defined(FEM_USE_SEQUENTIAL_SOLVER)
+#error "Reordering options require FEM_USE_SEQUENTIAL_SOLVER to be defined"
+#endif
+
+#ifdef FEM_USE_SEQUENTIAL_SOLVER
 
 #if defined(FEM_USE_NATURAL_ORDERING)
 using DefaultOrderingType = Eigen::NaturalOrdering<int>;
@@ -35,23 +53,43 @@ using DefaultOrderingType = Eigen::AMDOrdering<int>;
 constexpr const char* ReorderingName = "AMD";
 #endif
 
+constexpr bool UseSequentialSolver = true;
+
+#else
+
+using DefaultOrderingType = Eigen::AMDOrdering<int>;
+constexpr const char* ReorderingName = "Pardiso Internal";
+constexpr bool UseSequentialSolver = false;
+
+#endif
+
+// ============================================================================
+// Utility Functions
+// ============================================================================
+
 inline void PrintCompileConfig()
 {
 	std::println("Compile Configuration:");
-	std::println("Precision: double (64-bit)");
-	std::println("Storage Format: {}", StorageOrderName);
-	std::println("Reordering: {}", ReorderingName);
+	std::println("  Precision: double (64-bit)");
+	std::println("  Storage Format: {}", StorageOrderName);
+	std::println("  Reordering: {}", ReorderingName);
 
 #ifdef NDEBUG
-	std::println("Build Type: Release");
+	std::println("  Build Type: Release");
 #else
-	std::println("Build Type: Debug");
+	std::println("  Build Type: Debug");
 #endif
 
 #ifdef _OPENMP
-	std::println("OpenMP: Enabled");
+	std::println("  OpenMP: Enabled");
 #else
-	std::println("OpenMP: Disabled");
+	std::println("  OpenMP: Disabled");
+#endif
+
+#ifdef EIGEN_USE_MKL_ALL
+	std::println("  MKL: Enabled");
+#else
+	std::println("  MKL: Disabled");
 #endif
 }
 

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CompileConfig.h"
 #include "logger/logger.h"
 
 #ifdef EIGEN_USE_MKL_ALL
@@ -21,17 +22,27 @@ public:
 #endif
 	}
 
-	static void SetNumThreads(int nThreads)
+	static void SetNumThreads(size_t requestedThreads)
 	{
-		if constexpr (IsEnabled())
-		{
-			mkl_set_num_threads(nThreads);
-			LOG_INFO("MKL: Set to {} threads", nThreads);
-		}
-		else
+		if constexpr (!IsEnabled())
 		{
 			LOG_WARN("MKL not enabled");
+			return;
 		}
+
+		size_t actualThreads = requestedThreads;
+
+		if constexpr (UseSequentialSolver)
+		{
+			actualThreads = 1;
+			if (requestedThreads != 1)
+			{
+				LOG_INFO("MKL: Sequential solver mode - forcing 1 thread (requested: {})", requestedThreads);
+			}
+		}
+
+		mkl_set_num_threads(static_cast<int>(actualThreads));
+		LOG_INFO("MKL: Set to {} threads", actualThreads);
 	}
 
 	static int GetMaxThreads()

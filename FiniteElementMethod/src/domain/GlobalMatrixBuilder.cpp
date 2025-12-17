@@ -24,11 +24,14 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 	const auto& lines = m_Mesh.GetLines();
 	const auto numberOfLines = lines.size();
 
+	stats.elementCount = numberOfElements;
+	stats.boundaryElementCount = numberOfLines;
+
 	TripletsVector tripletsH;
 	TripletsVector tripletsC;
 	Vec globalP = Vec::Zero(numberOfNodes);
 
-	tripletsH.reserve(numberOfElements * 16); // TODO: Move number to variable
+	tripletsH.reserve(numberOfElements * 16);
 	tripletsC.reserve(numberOfElements * 16);
 
 	std::atomic<int> processedElements{ 0 };
@@ -75,6 +78,8 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 			}
 		}
 
+		auto mergeStart = Now();
+
 #pragma omp critical(merge_H)
 		{
 			tripletsH.insert(tripletsH.end(), localTripletsH.begin(), localTripletsH.end());
@@ -89,6 +94,11 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 		{
 			globalP += localP;
 		}
+
+#pragma omp single
+		{
+			stats.mergeTimeMs = ElapsedMs(mergeStart, Now());
+		}
 	}
 
 	if (hasError.load())
@@ -98,22 +108,42 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 	}
 
 	auto elementEnd = Now();
-	stats.elementAssemblyTimeMs = ElapsedMs(elementStart, elementEnd);
+	stats.elementAssemblyTimeMs = ElapsedMs(elementStart, elementEnd) - stats.mergeTimeMs;
 
-	// TODO: Check how boundary conditions are handled
-	// TODO: Display progress for lines
 	auto boundaryStart = Now();
 
-	for (auto& line : lines)
+	std::atomic<int> processedLines{ 0 };
+	std::atomic<int> lastLoggedLinePercent{ 0 };
+	const int totalLines = static_cast<int>(numberOfLines);
+
+	for (size_t i = 0; i < numberOfLines; i++)
 	{
+		const auto& line = lines[i];
 		const auto& res = m_Builder.BuildLineBoundaryMatrices(m_Mesh, line);
 		if (!res) continue;
 
 		AssembleLineElement(line, *res, tripletsH, globalP);
+
+		int done = ++processedLines;
+		int currentPercent = (done * 100) / totalLines;
+		int roundedPercent = (currentPercent / 10) * 10;
+
+		if (roundedPercent > lastLoggedLinePercent.load(std::memory_order_relaxed))
+		{
+			int expected = roundedPercent - 10;
+			if (lastLoggedLinePercent.compare_exchange_strong(expected, roundedPercent))
+			{
+				LOG_INFO("Assembling boundary... {}% ({}/{})", roundedPercent, done, totalLines);
+			}
+		}
 	}
 
 	auto boundaryEnd = Now();
 	stats.boundaryAssemblyTimeMs = ElapsedMs(boundaryStart, boundaryEnd);
+
+	stats.tripletsHCount = tripletsH.size();
+	stats.tripletsCCount = tripletsC.size();
+	stats.tripletsMemoryBytes = (tripletsH.capacity() + tripletsC.capacity()) * sizeof(Triplet);
 
 	GlobalMatrices out;
 	out.H.resize(numberOfNodes, numberOfNodes);
@@ -128,19 +158,31 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 	auto tripletEnd = Now();
 	stats.tripletToSparseTimeMs = ElapsedMs(tripletStart, tripletEnd);
 
+	size_t nnzH = out.H.nonZeros();
+	size_t nnzC = out.C.nonZeros();
+	stats.sparseMatrixMemoryBytes =
+		(nnzH + nnzC) * (sizeof(double) + sizeof(int)) +
+		2 * (numberOfNodes + 1) * sizeof(int) +
+		numberOfNodes * sizeof(double);
+
 	auto totalEnd = Now();
 	stats.totalAssemblyTimeMs = ElapsedMs(totalStart, totalEnd);
 
 	LOG_INFO("Matrix H statistics:");
 	LOG_INFO("  Size: {} x {}", out.H.rows(), out.H.cols());
-	LOG_INFO("  Non-zeros: {}", out.H.nonZeros());
-	LOG_INFO("  Fill ratio: {:.4f}%", 100.0 * out.H.nonZeros() / (out.H.rows() * out.H.cols()));
+	LOG_INFO("  Non-zeros: {} (H), {} (C)", nnzH, nnzC);
+	LOG_INFO("  Fill ratio: {:.4f}%", 100.0 * nnzH / (out.H.rows() * out.H.cols()));
 
 	LOG_INFO("Assembly timing:");
-	LOG_INFO("  Element assembly: {:.2f} ms", stats.elementAssemblyTimeMs);
-	LOG_INFO("  Boundary assembly: {:.2f} ms", stats.boundaryAssemblyTimeMs);
+	LOG_INFO("  Element assembly: {:.2f} ms ({:.0f} elem/s)", stats.elementAssemblyTimeMs, stats.getElementsPerSecond());
+	LOG_INFO("  Boundary assembly: {:.2f} ms ({:.0f} elem/s)", stats.boundaryAssemblyTimeMs, stats.getBoundaryElementsPerSecond());
+	LOG_INFO("  Merge time: {:.2f} ms", stats.mergeTimeMs);
 	LOG_INFO("  Triplet to sparse: {:.2f} ms", stats.tripletToSparseTimeMs);
 	LOG_INFO("  Total: {:.2f} ms", stats.totalAssemblyTimeMs);
+
+	LOG_INFO("Memory usage:");
+	LOG_INFO("  Triplets: {:.2f} MB ({} H, {} C)", stats.getTripletsMemoryMB(), stats.tripletsHCount, stats.tripletsCCount);
+	LOG_INFO("  Sparse matrices: {:.2f} MB", stats.getSparseMatrixMemoryMB());
 
 	return GlobalMatrixBuildResult{ .matrices = std::move(out), .stats = stats };
 }
