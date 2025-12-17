@@ -23,9 +23,6 @@ public:
 		SpMat C;
 		Vec P;
 		bool hasCapacity;
-
-		SystemCache(SystemCache&&) noexcept = default;
-		SystemCache& operator=(SystemCache&&) noexcept = default;
 	};
 
 	struct CacheMetadata

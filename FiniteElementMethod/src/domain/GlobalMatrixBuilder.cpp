@@ -86,6 +86,11 @@ std::expected<GlobalMatrices, int> fem::domain::GlobalMatrixBuilder::Build() con
 	out.H.setFromTriplets(tripletsH.begin(), tripletsH.end());
 	out.C.setFromTriplets(tripletsC.begin(), tripletsC.end());
 
+	LOG_INFO("Matrix H statistics:");
+	LOG_INFO("  Size: {} x {}", out.H.rows(), out.H.cols());
+	LOG_INFO("  Non-zeros: {}", out.H.nonZeros());
+	LOG_INFO("  Fill ratio: {:.4f}%", 100.0 * out.H.nonZeros() / (out.H.rows() * out.H.cols()));
+
 	return out;
 }
 
