@@ -112,15 +112,20 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 
 	auto boundaryStart = Now();
 
-	std::atomic<int> processedLines{ 0 };
-	std::atomic<int> lastLoggedLinePercent{ 0 };
+	int processedLines{};
+	int lastLoggedLinePercent{};
 	const int totalLines = static_cast<int>(numberOfLines);
 
 	for (size_t i = 0; i < numberOfLines; i++)
 	{
 		const auto& line = lines[i];
 		const auto& res = m_Builder.BuildLineBoundaryMatrices(m_Mesh, line);
-		if (!res) continue;
+		if (!res)
+		{
+			hasError.store(true, std::memory_order_relaxed);
+			LOG_ERROR("Failed to build matrices for boundary line {}", i);
+			continue;
+		}
 
 		AssembleLineElement(line, *res, tripletsH, globalP);
 
@@ -128,14 +133,21 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 		int currentPercent = (done * 100) / totalLines;
 		int roundedPercent = (currentPercent / 10) * 10;
 
-		if (roundedPercent > lastLoggedLinePercent.load(std::memory_order_relaxed))
+		if (roundedPercent > lastLoggedLinePercent)
 		{
 			int expected = roundedPercent - 10;
-			if (lastLoggedLinePercent.compare_exchange_strong(expected, roundedPercent))
+			if (roundedPercent > lastLoggedLinePercent)
 			{
+				lastLoggedLinePercent = roundedPercent;
 				LOG_INFO("Assembling boundary... {}% ({}/{})", roundedPercent, done, totalLines);
 			}
 		}
+	}
+
+	if (hasError.load())
+	{
+		LOG_ERROR("Boundary line assembly failed");
+		return std::unexpected(-1);
 	}
 
 	auto boundaryEnd = Now();
