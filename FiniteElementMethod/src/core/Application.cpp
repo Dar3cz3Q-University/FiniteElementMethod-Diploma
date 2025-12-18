@@ -43,7 +43,6 @@ void Application::Initialize()
 		nThreads = m_Options.numberOfThreads.value();
 
 	config::OMPConfig::SetNumThreads(nThreads);
-
 	config::MKLConfig::SetDynamic(false);
 	config::MKLConfig::SetNumThreads(nThreads);
 
@@ -78,6 +77,7 @@ ExitCode Application::Execute()
 	config::OMPConfig::PrintInfo();
 	config::MKLConfig::PrintInfo();
 	config::SIMDConfig::PrintInfo();
+	config::EigenConfig::PrintInfo();
 
 	const auto& parsedConfig = config::loader::ConfigLoader::LoadFromFile(m_Options.configFilePath);
 
