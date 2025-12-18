@@ -70,6 +70,13 @@ workspace "FiniteElementMethod"
     defines { "NDEBUG" }
     runtime "Release"
     optimize "Full"
+    buildoptions {
+      "/O2",
+      "/Oi",
+      "/Ot",
+      "/arch:AVX2",
+      "/GL"
+    }
     libdirs { VcpkgInstalled .. "/lib" }
     links(releaseLibraries)
     linktimeoptimization "on"

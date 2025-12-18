@@ -77,6 +77,7 @@ ExitCode Application::Execute()
 
 	config::OMPConfig::PrintInfo();
 	config::MKLConfig::PrintInfo();
+	config::SIMDConfig::PrintInfo();
 
 	const auto& parsedConfig = config::loader::ConfigLoader::LoadFromFile(m_Options.configFilePath);
 
