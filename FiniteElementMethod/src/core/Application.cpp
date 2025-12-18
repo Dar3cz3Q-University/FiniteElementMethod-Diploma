@@ -197,6 +197,12 @@ ExitCode Application::Execute()
 	}
 
 	// TODO: Extract output paths to config
+
+	if (!parsedConfig->transientConfig->saveHistory)
+	{
+		return Success;
+	}
+
 	if (solution->isSteady())
 	{
 		fs::path vtkPath = "output/solution.vtk";
