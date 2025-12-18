@@ -88,7 +88,7 @@ std::expected<LinearSolverResult, SolverError> SparseLUSolver::Solve(const SpMat
 
 	auto end = Now();
 	stats.elapsedTimeMs = ElapsedMs(start, end);
-	stats.residualNorm = x.norm();
+	stats.residualNorm = (A * x - b).norm();
 
 	return LinearSolverResult{
 		.solution = std::move(x),

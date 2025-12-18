@@ -70,7 +70,7 @@ std::expected<LinearSolverResult, SolverError> CholeskyLDLTSolver::Solve(const S
 
 	auto solveEnd = Now();
 	stats.solveTimeMs = ElapsedMs(solveStart, solveEnd);
-	stats.residualNorm = x.norm();
+	stats.residualNorm = (A * x - b).norm();
 
 	// TODO: Map Eigen errors to SolverError more precisely
 	if (solver.info() != Eigen::Success)
