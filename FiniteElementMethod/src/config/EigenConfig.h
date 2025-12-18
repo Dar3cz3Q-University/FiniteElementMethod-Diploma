@@ -19,4 +19,4 @@ private:
 	EigenConfig() = delete;
 };
 
-}
+} // namespace fem::config

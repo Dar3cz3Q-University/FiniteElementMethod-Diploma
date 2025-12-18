@@ -62,6 +62,7 @@ public:
 		if constexpr (IsEnabled())
 		{
 			LOG_INFO("  Status: Enabled");
+			LOG_INFO("  Version: {}", _OPENMP);
 			LOG_INFO("  Max threads: {}", GetMaxThreads());
 			LOG_INFO("  Available processors: {}", GetNumProcs());
 		}
@@ -75,4 +76,4 @@ private:
 	OMPConfig() = delete;
 };
 
-}
+} // namespace fem::config

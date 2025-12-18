@@ -83,7 +83,6 @@ public:
 
 	static constexpr size_t GetDefaultPacketSize()
 	{
-		// Eigen's default packet size for double precision
 		return Eigen::internal::packet_traits<double>::size;
 	}
 

@@ -119,4 +119,4 @@ private:
 	MKLConfig() = delete;
 };
 
-}
+} // namespace fem::config

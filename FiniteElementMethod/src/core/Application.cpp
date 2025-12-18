@@ -12,8 +12,6 @@
 #include <iostream>
 #include <thread>
 
-#include "gmsh.h"
-
 namespace fem::core
 {
 
@@ -35,13 +33,14 @@ void Application::Initialize()
 		return;
 
 	fem::logger::Log::Init(m_Options.logLevel);
-	gmsh::initialize();
+
 
 	size_t nThreads = std::thread::hardware_concurrency();
 
 	if (m_Options.numberOfThreads.has_value())
 		nThreads = m_Options.numberOfThreads.value();
 
+	config::GmshConfig::Initialize();
 	config::OMPConfig::SetNumThreads(nThreads);
 	config::MKLConfig::SetDynamic(false);
 	config::MKLConfig::SetNumThreads(nThreads);
@@ -59,7 +58,7 @@ void Application::TearDown() noexcept
 
 	LOG_INFO("Application shutting down...");
 
-	gmsh::finalize();
+	config::GmshConfig::Finalize();
 
 	m_Initialized = false;
 }
@@ -74,6 +73,7 @@ ExitCode Application::Execute()
 
 	LOG_INFO("Application running...");
 
+	config::GmshConfig::PrintInfo();
 	config::OMPConfig::PrintInfo();
 	config::MKLConfig::PrintInfo();
 	config::SIMDConfig::PrintInfo();

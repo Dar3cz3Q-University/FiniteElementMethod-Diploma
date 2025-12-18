@@ -33,7 +33,7 @@ workspace "FiniteElementMethod"
   flags { "MultiProcessorCompile" }
 
   filter "system:windows"
-    buildoptions { "/utf-8", "/openmp", "/external:W0" }
+    buildoptions { "/utf-8", "/openmp:llvm", "/external:W0" }
     staticruntime "off"
     links { "psapi" }
     externalwarnings "Off"
