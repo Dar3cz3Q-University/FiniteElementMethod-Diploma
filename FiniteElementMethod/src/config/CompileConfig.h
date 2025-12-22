@@ -93,19 +93,19 @@ inline void PrintCompileConfig()
 #endif
 
 #ifdef EIGEN_VECTORIZE
-	#ifdef EIGEN_VECTORIZE_AVX512
-		std::println("  SIMD: AVX-512");
-	#elif defined(EIGEN_VECTORIZE_AVX2)
-		std::println("  SIMD: AVX2");
-	#elif defined(EIGEN_VECTORIZE_AVX)
-		std::println("  SIMD: AVX");
-	#elif defined(EIGEN_VECTORIZE_SSE4_2)
-		std::println("  SIMD: SSE4.2");
-	#elif defined(EIGEN_VECTORIZE_SSE2)
-		std::println("  SIMD: SSE2");
-	#else
-		std::println("  SIMD: Enabled");
-	#endif
+#ifdef EIGEN_VECTORIZE_AVX512
+	std::println("  SIMD: AVX-512");
+#elif defined(EIGEN_VECTORIZE_AVX2)
+	std::println("  SIMD: AVX2");
+#elif defined(EIGEN_VECTORIZE_AVX)
+	std::println("  SIMD: AVX");
+#elif defined(EIGEN_VECTORIZE_SSE4_2)
+	std::println("  SIMD: SSE4.2");
+#elif defined(EIGEN_VECTORIZE_SSE2)
+	std::println("  SIMD: SSE2");
+#else
+	std::println("  SIMD: Enabled");
+#endif
 #else
 	std::println("  SIMD: Disabled");
 #endif

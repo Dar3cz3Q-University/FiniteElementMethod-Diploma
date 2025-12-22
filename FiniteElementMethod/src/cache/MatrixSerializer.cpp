@@ -2,10 +2,9 @@
 
 #include "logger/logger.h"
 
-#include <unsupported/Eigen/SparseExtra>
 #include <filesystem>
+#include <fstream>
 
-// TODO: Use std::expected and fileio module
 namespace fem::cache
 {
 
@@ -15,14 +14,29 @@ bool MatrixSerializer::SaveSparseMatrix(const std::string& filename, const SpMat
 {
 	fs::create_directories(fs::path(filename).parent_path());
 
-	if (!Eigen::saveMarket(matrix, filename))
+	std::ofstream file(filename, std::ios::binary);
+	if (!file.is_open())
 	{
-		LOG_ERROR("Failed to save matrix: {}", filename);
+		LOG_ERROR("Failed to open file for writing: {}", filename);
 		return false;
 	}
 
+	Eigen::Index rows = matrix.rows();
+	Eigen::Index cols = matrix.cols();
+	Eigen::Index nnz = matrix.nonZeros();
+
+	file.write(reinterpret_cast<const char*>(&rows), sizeof(rows));
+	file.write(reinterpret_cast<const char*>(&cols), sizeof(cols));
+	file.write(reinterpret_cast<const char*>(&nnz), sizeof(nnz));
+
+	file.write(reinterpret_cast<const char*>(matrix.outerIndexPtr()), (cols + 1) * sizeof(SpMat::StorageIndex));
+	file.write(reinterpret_cast<const char*>(matrix.innerIndexPtr()), nnz * sizeof(SpMat::StorageIndex));
+	file.write(reinterpret_cast<const char*>(matrix.valuePtr()), nnz * sizeof(SpMat::Scalar));
+
+	file.close();
+
 	LOG_TRACE("Matrix saved: {} ({}x{}, {} nonzeros, {:.2f} MB)",
-		filename, matrix.rows(), matrix.cols(), matrix.nonZeros(),
+		filename, rows, cols, nnz,
 		fs::file_size(filename) / (1024.0 * 1024.0));
 
 	return true;
@@ -36,11 +50,26 @@ bool MatrixSerializer::LoadSparseMatrix(const std::string& filename, SpMat& matr
 		return false;
 	}
 
-	if (!Eigen::loadMarket(matrix, filename))
+	std::ifstream file(filename, std::ios::binary);
+	if (!file.is_open())
 	{
-		LOG_ERROR("Failed to load matrix: {}", filename);
+		LOG_ERROR("Failed to open file for reading: {}", filename);
 		return false;
 	}
+
+	Eigen::Index rows, cols, nnz;
+	file.read(reinterpret_cast<char*>(&rows), sizeof(rows));
+	file.read(reinterpret_cast<char*>(&cols), sizeof(cols));
+	file.read(reinterpret_cast<char*>(&nnz), sizeof(nnz));
+
+	matrix.resize(rows, cols);
+	matrix.resizeNonZeros(nnz);
+
+	file.read(reinterpret_cast<char*>(matrix.outerIndexPtr()), (cols + 1) * sizeof(SpMat::StorageIndex));
+	file.read(reinterpret_cast<char*>(matrix.innerIndexPtr()), nnz * sizeof(SpMat::StorageIndex));
+	file.read(reinterpret_cast<char*>(matrix.valuePtr()), nnz * sizeof(SpMat::Scalar));
+
+	file.close();
 
 	LOG_TRACE("Matrix loaded: {} ({}x{}, {} nonzeros)",
 		filename, matrix.rows(), matrix.cols(), matrix.nonZeros());
@@ -104,7 +133,7 @@ bool MatrixSerializer::SaveSparseMatrices(
 {
 	for (const auto& [name, matrix] : matrices)
 	{
-		std::string filename = std::format("{}/{}_{}.mtx", directory, prefix, name);
+		std::string filename = std::format("{}/{}_{}.bin", directory, prefix, name);
 		if (!SaveSparseMatrix(filename, *matrix))
 		{
 			return false;
@@ -121,7 +150,7 @@ bool MatrixSerializer::LoadSparseMatrices(
 {
 	for (auto& [name, matrix] : matrices)
 	{
-		std::string filename = std::format("{}/{}_{}.mtx", directory, prefix, name);
+		std::string filename = std::format("{}/{}_{}.bin", directory, prefix, name);
 		if (!LoadSparseMatrix(filename, *matrix))
 		{
 			return false;

@@ -57,7 +57,7 @@ bool CacheManager::SaveSteadySystem(
 		return false;
 	}
 
-	if (!MatrixSerializer::SaveSparseMatrix(cacheDir + "/H.mtx", H))
+	if (!MatrixSerializer::SaveSparseMatrix(cacheDir + "/H.bin", H))
 	{
 		return false;
 	}
@@ -125,12 +125,12 @@ bool CacheManager::SaveTransientSystem(
 		return false;
 	}
 
-	if (!MatrixSerializer::SaveSparseMatrix(cacheDir + "/H.mtx", H))
+	if (!MatrixSerializer::SaveSparseMatrix(cacheDir + "/H.bin", H))
 	{
 		return false;
 	}
 
-	if (!MatrixSerializer::SaveSparseMatrix(cacheDir + "/C.mtx", C))
+	if (!MatrixSerializer::SaveSparseMatrix(cacheDir + "/C.bin", C))
 	{
 		return false;
 	}
@@ -214,13 +214,13 @@ std::optional<CacheManager::SystemCache> CacheManager::LoadSystem(
 	SystemCache cache;
 	cache.hasCapacity = meta->hasCapacityMatrix;
 
-	if (!MatrixSerializer::LoadSparseMatrix(cacheDir + "/H.mtx", cache.H))
+	if (!MatrixSerializer::LoadSparseMatrix(cacheDir + "/H.bin", cache.H))
 	{
 		LOG_ERROR("Failed to load matrix H");
 		return std::nullopt;
 	}
 
-	if (cache.hasCapacity && !MatrixSerializer::LoadSparseMatrix(cacheDir + "/C.mtx", cache.C))
+	if (cache.hasCapacity && !MatrixSerializer::LoadSparseMatrix(cacheDir + "/C.bin", cache.C))
 	{
 		LOG_ERROR("Failed to load matrix C");
 		return std::nullopt;
