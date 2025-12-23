@@ -43,8 +43,14 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 
 #pragma omp parallel
 	{
+		const int numThreads = omp_get_num_threads();
+		const size_t estimatedPerThread = (numberOfElements / numThreads + 1) * 16;
+
 		TripletsVector localTripletsH;
 		TripletsVector localTripletsC;
+		localTripletsH.reserve(estimatedPerThread);
+		localTripletsC.reserve(estimatedPerThread);
+
 		Vec localP = Vec::Zero(numberOfNodes);
 
 #pragma omp for schedule(dynamic, 64)

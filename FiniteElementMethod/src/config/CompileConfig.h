@@ -19,7 +19,7 @@ namespace fem::config
 // Storage Format Configuration
 // ============================================================================
 
-//#define FEM_USE_ROW_MAJOR // Uncomment for CSR format
+#define FEM_USE_ROW_MAJOR // Uncomment for CSR format
 
 #ifdef FEM_USE_ROW_MAJOR
 constexpr int StorageOrder = Eigen::RowMajor;
