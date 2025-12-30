@@ -6,24 +6,35 @@
 #include <fstream>
 #include <cstring>
 #include <cstdlib>
+#include <filesystem>
 
 #include <mkl.h>
 
 using namespace fem::solver::standalone;
+namespace fs = std::filesystem;
 
 struct Options
 {
-	const char* matrixFile = nullptr;
-	const char* rhsFile = nullptr;
-	const char* solutionFile = nullptr;
-	const char* metricsFile = nullptr;
+	fs::path directory;
+	fs::path matrixFile;
+	fs::path rhsFile;
+	fs::path solutionFile;
+	fs::path metricsFile;
 	bool useLU = false;
 	int threads = 0;
 };
 
 void PrintUsage(const char* name)
 {
-	std::cout << "Usage: " << name << " <matrix.mtx> <rhs.txt> <solution.txt> [options]\n"
+	std::cout << "Usage: " << name << " <directory> [options]\n"
+		<< "\n"
+		<< "The directory should contain:\n"
+		<< "  H.mtx  - stiffness matrix (Matrix Market format)\n"
+		<< "  P.txt  - load vector\n"
+		<< "\n"
+		<< "Output:\n"
+		<< "  solution.txt - solution vector (saved in the same directory)\n"
+		<< "\n"
 		<< "Options:\n"
 		<< "  -s, --solver <ldlt|lu>   Solver type (default: ldlt)\n"
 		<< "  -t, --threads <n>        Number of MKL threads (default: auto)\n"
@@ -32,14 +43,34 @@ void PrintUsage(const char* name)
 
 bool ParseArgs(int argc, char* argv[], Options& opts)
 {
-	if (argc < 4)
+	if (argc < 2)
 		return false;
 
-	opts.matrixFile = argv[1];
-	opts.rhsFile = argv[2];
-	opts.solutionFile = argv[3];
+	opts.directory = argv[1];
 
-	for (int i = 4; i < argc; ++i)
+	if (!fs::exists(opts.directory) || !fs::is_directory(opts.directory))
+	{
+		std::cerr << "Error: '" << opts.directory.string() << "' is not a valid directory\n";
+		return false;
+	}
+
+	opts.matrixFile = opts.directory / "H.mtx";
+	opts.rhsFile = opts.directory / "P.txt";
+	opts.solutionFile = opts.directory / "solution.txt";
+
+	if (!fs::exists(opts.matrixFile))
+	{
+		std::cerr << "Error: Matrix file not found: " << opts.matrixFile.string() << "\n";
+		return false;
+	}
+
+	if (!fs::exists(opts.rhsFile))
+	{
+		std::cerr << "Error: RHS vector file not found: " << opts.rhsFile.string() << "\n";
+		return false;
+	}
+
+	for (int i = 2; i < argc; ++i)
 	{
 		if ((std::strcmp(argv[i], "-s") == 0 || std::strcmp(argv[i], "--solver") == 0) && i + 1 < argc)
 		{
@@ -57,12 +88,12 @@ bool ParseArgs(int argc, char* argv[], Options& opts)
 	return true;
 }
 
-void SaveMetrics(const char* filename, const SolverStats& stats, const Options& opts)
+void SaveMetrics(const fs::path& filename, const SolverStats& stats, const Options& opts)
 {
 	std::ofstream file(filename);
 	if (!file.is_open())
 	{
-		std::cerr << "Cannot write metrics to: " << filename << std::endl;
+		std::cerr << "Cannot write metrics to: " << filename.string() << std::endl;
 		return;
 	}
 
@@ -77,12 +108,12 @@ void SaveMetrics(const char* filename, const SolverStats& stats, const Options& 
 		<< "Peak memory (MB): " << stats.peakMemoryBytes / (1024.0 * 1024.0) << "\n"
 		<< "Residual norm: " << stats.residualNorm << "\n";
 
-	std::cout << "Metrics saved to: " << filename << std::endl;
+	std::cout << "Metrics saved to: " << filename.string() << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-	std::cout << "Standalone Solver" << std::endl;
+	std::cout << "Standalone Solver\n" << std::endl;
 
 	Options opts;
 	if (!ParseArgs(argc, argv, opts))
@@ -96,27 +127,28 @@ int main(int argc, char* argv[])
 
 	PrintMKLInfo();
 
+	std::cout << "Directory: " << opts.directory.string() << std::endl;
 	std::cout << "Solver: " << (opts.useLU ? "PardisoLU" : "PardisoLDLT") << std::endl;
 
-	SpMat K;
-	Vec b, x;
+	SpMat H;
+	Vec P, T;
 
-	if (!LoadMatrixMarket(opts.matrixFile, K))
+	if (!LoadMatrixMarket(opts.matrixFile.string(), H))
 		return 1;
-	if (!LoadVector(opts.rhsFile, b))
+	if (!LoadVector(opts.rhsFile.string(), P))
 		return 1;
 
 	SolverStats stats;
-	bool success = opts.useLU ? SolvePARDISO_LU(K, b, x, stats) : SolvePARDISO_LDLT(K, b, x, stats);
+	bool success = opts.useLU ? SolvePARDISO_LU(H, P, T, stats) : SolvePARDISO_LDLT(H, P, T, stats);
 
 	if (!success)
 		return 1;
-	if (!SaveVector(opts.solutionFile, x))
+	if (!SaveVector(opts.solutionFile.string(), T))
 		return 1;
 
 	PrintBenchmark(stats);
 
-	if (opts.metricsFile)
+	if (!opts.metricsFile.empty())
 		SaveMetrics(opts.metricsFile, stats, opts);
 
 	return 0;
