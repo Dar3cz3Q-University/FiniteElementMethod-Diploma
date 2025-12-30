@@ -90,6 +90,9 @@ bool ParseArgs(int argc, char* argv[], Options& opts)
 
 void SaveMetrics(const fs::path& filename, const SolverStats& stats, const Options& opts)
 {
+	if (filename.has_parent_path())
+		fs::create_directories(filename.parent_path());
+
 	std::ofstream file(filename);
 	if (!file.is_open())
 	{
