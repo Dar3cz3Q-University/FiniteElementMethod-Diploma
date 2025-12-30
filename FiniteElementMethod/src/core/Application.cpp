@@ -9,8 +9,12 @@
 #include "solver/solver.h"
 
 #include <filesystem>
+#include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <thread>
+
+#include <unsupported/Eigen/SparseExtra>
 
 namespace fem::core
 {
@@ -152,6 +156,42 @@ ExitCode Application::Execute()
 		if (m_Options.useCache)
 		{
 			cache::CacheManager::SaveTransientSystem(cache::CACHE_ROOT, H, C, P, parsedConfig->meshPath.string(), m_Options.configFilePath.string());
+		}
+	}
+
+	if (m_Options.exportMtxPath.has_value())
+	{
+		const auto& exportDir = m_Options.exportMtxPath.value();
+		fs::create_directories(exportDir);
+
+		LOG_INFO("Exporting matrices to Matrix Market format in: {}", exportDir.string());
+
+		auto hPath = exportDir / "H.mtx";
+		auto cPath = exportDir / "C.mtx";
+		auto pPath = exportDir / "P.txt";
+
+		if (Eigen::saveMarket(H, hPath.string()))
+			LOG_INFO("  Saved H matrix: {} ({} x {}, {} nnz)", hPath.string(), H.rows(), H.cols(), H.nonZeros());
+		else
+			LOG_ERROR("  Failed to save H matrix");
+
+		if (Eigen::saveMarket(C, cPath.string()))
+			LOG_INFO("  Saved C matrix: {} ({} x {}, {} nnz)", cPath.string(), C.rows(), C.cols(), C.nonZeros());
+		else
+			LOG_ERROR("  Failed to save C matrix");
+
+		std::ofstream pFile(pPath);
+		if (pFile.is_open())
+		{
+			pFile << std::scientific << std::setprecision(15);
+			for (Eigen::Index i = 0; i < P.size(); ++i)
+				pFile << P[i] << "\n";
+			pFile.close();
+			LOG_INFO("  Saved P vector: {} ({} elements)", pPath.string(), P.size());
+		}
+		else
+		{
+			LOG_ERROR("  Failed to save P vector");
 		}
 	}
 

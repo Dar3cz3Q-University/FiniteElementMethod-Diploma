@@ -23,6 +23,8 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 			cxxopts::value<std::string>())
 		("m,metrics", "Metrics file path",
 			cxxopts::value<std::string>())
+		("e,export-mtx", "Export matrices to Matrix Market format (directory path)",
+			cxxopts::value<std::string>())
 		("t,threads", "Number of threads (default: hardware concurrency)",
 			cxxopts::value<std::size_t>())
 		("s,solver", GenerateSolverHelpText(),
@@ -56,6 +58,9 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 		return std::unexpected(res.error());
 
 	if (auto res = ExtractMetricsFilePath(result, &config); !res)
+		return std::unexpected(res.error());
+
+	if (auto res = ExtractExportMtxPath(result, &config); !res)
 		return std::unexpected(res.error());
 
 	if (auto res = ExtractThreadsNumber(result, &config); !res)
@@ -110,6 +115,14 @@ std::expected<void, CliError> CliParser::ExtractMetricsFilePath(const cxxopts::P
 {
 	if (result.count("metrics"))
 		config->metricsFilePath = result["metrics"].as<std::string>();
+
+	return {};
+}
+
+std::expected<void, CliError> CliParser::ExtractExportMtxPath(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	if (result.count("export-mtx"))
+		config->exportMtxPath = result["export-mtx"].as<std::string>();
 
 	return {};
 }

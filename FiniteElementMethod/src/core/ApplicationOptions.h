@@ -18,6 +18,7 @@ struct ApplicationOptions
 	spdlog::level::level_enum logLevel = spdlog::level::info;
 	std::filesystem::path configFilePath;
 	std::optional<std::filesystem::path> metricsFilePath;
+	std::optional<std::filesystem::path> exportMtxPath;
 	std::optional<std::size_t> numberOfThreads;
 	solver::linear::LinearSolverType LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
 
@@ -31,6 +32,7 @@ struct ApplicationOptions
 		oss << "  Log Level: " << spdlog::level::to_string_view(logLevel).data() << "\n";
 		oss << "  Config File: " << (configFilePath.empty() ? "<not set>" : configFilePath.string()) << "\n";
 		oss << "  Metrics File: " << (metricsFilePath.has_value() ? metricsFilePath->string() : "<not set>") << "\n";
+		oss << "  Export MTX: " << (exportMtxPath.has_value() ? exportMtxPath->string() : "<not set>") << "\n";
 		oss << "  Number of Threads: " << (numberOfThreads.has_value() ? std::to_string(numberOfThreads.value()) : "auto") << "\n";
 		oss << "  Linear Solver: " << solver::linear::LinearSolverTypeToString(LinearSolverType);
 
