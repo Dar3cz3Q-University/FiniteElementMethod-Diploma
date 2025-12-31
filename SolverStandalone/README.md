@@ -1,5 +1,7 @@
 # SolverStandalone
 
+> **Note:** The `SolverStandalone` module is **Linux only**.
+
 ---
 
 ## Setup
