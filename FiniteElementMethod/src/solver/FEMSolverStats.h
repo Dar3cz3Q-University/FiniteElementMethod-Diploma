@@ -18,7 +18,6 @@ struct FEMSolverStats
 	double setupTimeMs = 0.0;
 	double overheadMs = 0.0;
 
-	size_t memoryUsedBytes = 0;
 	size_t peakMemoryBytes = 0;
 
 	double residualNorm = 0.0;
@@ -28,11 +27,6 @@ struct FEMSolverStats
 	size_t matrixSize = 0;
 	size_t matrixNonZeros = 0;
 	size_t linearSolveCount = 1;
-
-	double getMemoryUsedMB() const
-	{
-		return BytesToMiB(memoryUsedBytes);
-	}
 
 	double getPeakMemoryMB() const
 	{
@@ -72,7 +66,6 @@ struct FEMSolverStats
 			.totalTimeMs = totalTimeMs,
 			.setupTimeMs = 0.0,
 			.overheadMs = totalTimeMs - linearStats.elapsedTimeMs,
-			.memoryUsedBytes = linearStats.memoryUsedBytes,
 			.peakMemoryBytes = linearStats.peakMemoryBytes,
 			.residualNorm = linearStats.residualNorm,
 			.minResidual = linearStats.residualNorm,

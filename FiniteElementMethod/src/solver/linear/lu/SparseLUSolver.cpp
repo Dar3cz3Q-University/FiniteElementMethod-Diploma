@@ -38,8 +38,6 @@ std::expected<LinearSolverResult, SolverError> SparseLUSolver::Solve(const SpMat
 	stats.matrixSize = A.rows();
 	stats.matrixNonZeros = A.nonZeros();
 
-	size_t memBefore = metrics::MemoryMonitor::GetCurrentUsage();
-
 	auto factorStart = Now();
 
 #ifdef FEM_USE_SEQUENTIAL_SOLVER
@@ -82,8 +80,6 @@ std::expected<LinearSolverResult, SolverError> SparseLUSolver::Solve(const SpMat
 		);
 	}
 
-	size_t memAfter = metrics::MemoryMonitor::GetCurrentUsage();
-	stats.memoryUsedBytes = memAfter - memBefore;
 	stats.peakMemoryBytes = metrics::MemoryMonitor::GetPeakUsage();
 
 	auto end = Now();

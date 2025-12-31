@@ -90,9 +90,7 @@ std::expected<void, std::string> StatsExporter::ExportJSON(const fs::path& path,
 	json["timing"]["linearSolveCount"] = ss.linearSolveCount;
 
 	// Memory
-	json["memory"]["solver"]["usedMB"] = ss.getMemoryUsedMB();
 	json["memory"]["solver"]["peakMB"] = ss.getPeakMemoryMB();
-	json["memory"]["solver"]["usedBytes"] = ss.memoryUsedBytes;
 	json["memory"]["solver"]["peakBytes"] = ss.peakMemoryBytes;
 
 	// Residuals

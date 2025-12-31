@@ -13,16 +13,10 @@ struct LinearSolverStats
 
 	double residualNorm = 0.0;
 
-	size_t memoryUsedBytes = 0; // TODO: Change the way it's calculated
 	size_t peakMemoryBytes = 0;
 
 	size_t matrixSize = 0;
 	size_t matrixNonZeros = 0;
-
-	double getMemoryUsedMB() const
-	{
-		return BytesToMiB(memoryUsedBytes);
-	}
 
 	double getPeakMemoryMB() const
 	{

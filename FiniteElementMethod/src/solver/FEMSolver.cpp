@@ -182,7 +182,6 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 		timeSteps.push_back(0.0);
 	}
 
-	size_t memBefore = metrics::MemoryMonitor::GetCurrentUsage();
 	auto totalStart = Now();
 
 	double totalSolverTime = 0.0;
@@ -228,7 +227,6 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 	}
 
 	auto totalEnd = Now();
-	size_t memAfter = metrics::MemoryMonitor::GetCurrentUsage();
 	size_t peakMem = metrics::MemoryMonitor::GetPeakUsage();
 
 	double totalTime = ElapsedMs(totalStart, totalEnd);
@@ -240,7 +238,6 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 		.totalTimeMs = totalTime,
 		.setupTimeMs = setupTime,
 		.overheadMs = totalTime - totalSolverTime,
-		.memoryUsedBytes = memAfter - memBefore,
 		.peakMemoryBytes = peakMem,
 		.residualNorm = maxResidual,
 		.minResidual = minResidual,
