@@ -37,37 +37,21 @@ namespace fem::solver::standalone
 		}
 
 		stats.matrixSize = K.rows();
-		stats.nonZeros = K.nonZeros();
-
-		std::cout << "\nMatrix: " << K.rows() << "x" << K.cols()
-			<< ", " << K.nonZeros() << " nnz" << std::endl;
+		stats.matrixNonZeros = K.nonZeros();
 
 		Eigen::PardisoLDLT<SpMat> solver;
 
 		auto totalStart = Now();
 
 		auto t1 = Now();
-		solver.analyzePattern(K);
-		stats.analyzeTimeMs = ElapsedMs(t1, Now());
+		solver.compute(K);
+		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
 		if (solver.info() != Eigen::Success)
 		{
-			std::cerr << "Analysis failed" << std::endl;
+			std::cerr << "Compute failed" << std::endl;
 			return false;
 		}
-		std::cout << "Analysis: " << std::fixed << std::setprecision(2)
-			<< stats.analyzeTimeMs << " ms" << std::endl;
-
-		t1 = Now();
-		solver.factorize(K);
-		stats.factorizeTimeMs = ElapsedMs(t1, Now());
-
-		if (solver.info() != Eigen::Success)
-		{
-			std::cerr << "Factorization failed" << std::endl;
-			return false;
-		}
-		std::cout << "Factorization: " << stats.factorizeTimeMs << " ms" << std::endl;
 
 		t1 = Now();
 		x = solver.solve(b);
@@ -78,13 +62,10 @@ namespace fem::solver::standalone
 			std::cerr << "Solve failed" << std::endl;
 			return false;
 		}
-		std::cout << "Solve: " << stats.solveTimeMs << " ms" << std::endl;
 
-		stats.totalTimeMs = ElapsedMs(totalStart, Now());
+		stats.elapsedTimeMs = ElapsedMs(totalStart, Now());
 		stats.residualNorm = (K * x - b).norm();
 		stats.peakMemoryBytes = GetPeakMemory();
-
-		std::cout << "Residual: " << std::scientific << stats.residualNorm << std::endl;
 
 		return true;
 	}
@@ -98,37 +79,21 @@ namespace fem::solver::standalone
 		}
 
 		stats.matrixSize = K.rows();
-		stats.nonZeros = K.nonZeros();
-
-		std::cout << "\nMatrix: " << K.rows() << "x" << K.cols()
-			<< ", " << K.nonZeros() << " nnz" << std::endl;
+		stats.matrixNonZeros = K.nonZeros();
 
 		Eigen::PardisoLU<SpMat> solver;
 
 		auto totalStart = Now();
 
 		auto t1 = Now();
-		solver.analyzePattern(K);
-		stats.analyzeTimeMs = ElapsedMs(t1, Now());
+		solver.compute(K);
+		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
 		if (solver.info() != Eigen::Success)
 		{
-			std::cerr << "Analysis failed" << std::endl;
+			std::cerr << "Compute failed" << std::endl;
 			return false;
 		}
-		std::cout << "Analysis: " << std::fixed << std::setprecision(2)
-			<< stats.analyzeTimeMs << " ms" << std::endl;
-
-		t1 = Now();
-		solver.factorize(K);
-		stats.factorizeTimeMs = ElapsedMs(t1, Now());
-
-		if (solver.info() != Eigen::Success)
-		{
-			std::cerr << "Factorization failed" << std::endl;
-			return false;
-		}
-		std::cout << "Factorization: " << stats.factorizeTimeMs << " ms" << std::endl;
 
 		t1 = Now();
 		x = solver.solve(b);
@@ -139,13 +104,10 @@ namespace fem::solver::standalone
 			std::cerr << "Solve failed" << std::endl;
 			return false;
 		}
-		std::cout << "Solve: " << stats.solveTimeMs << " ms" << std::endl;
 
-		stats.totalTimeMs = ElapsedMs(totalStart, Now());
+		stats.elapsedTimeMs = ElapsedMs(totalStart, Now());
 		stats.residualNorm = (K * x - b).norm();
 		stats.peakMemoryBytes = GetPeakMemory();
-
-		std::cout << "Residual: " << std::scientific << stats.residualNorm << std::endl;
 
 		return true;
 	}
@@ -155,11 +117,10 @@ namespace fem::solver::standalone
 		std::cout << "\n======== BENCHMARK ========" << std::endl;
 		std::cout << std::fixed << std::setprecision(2);
 		std::cout << "Size:          " << stats.matrixSize << "x" << stats.matrixSize << std::endl;
-		std::cout << "Non-zeros:     " << stats.nonZeros << std::endl;
-		std::cout << "Analysis:      " << stats.analyzeTimeMs << " ms" << std::endl;
-		std::cout << "Factorization: " << stats.factorizeTimeMs << " ms" << std::endl;
+		std::cout << "Non-zeros:     " << stats.matrixNonZeros << std::endl;
+		std::cout << "Factorization: " << stats.factorizationTimeMs << " ms" << std::endl;
 		std::cout << "Solve:         " << stats.solveTimeMs << " ms" << std::endl;
-		std::cout << "Total:         " << stats.totalTimeMs << " ms" << std::endl;
+		std::cout << "Total:         " << stats.elapsedTimeMs << " ms" << std::endl;
 		if (stats.peakMemoryBytes > 0)
 			std::cout << "Peak memory:   " << stats.peakMemoryBytes / (1024.0 * 1024.0) << " MB" << std::endl;
 		std::cout << "Residual:      " << std::scientific << stats.residualNorm << std::endl;

@@ -11,14 +11,17 @@ using Vec = Eigen::VectorXd;
 
 struct SolverStats
 {
-	double analyzeTimeMs = 0.0;
-	double factorizeTimeMs = 0.0;
+	double elapsedTimeMs = 0.0;
+	double factorizationTimeMs = 0.0;
 	double solveTimeMs = 0.0;
-	double totalTimeMs = 0.0;
+
 	double residualNorm = 0.0;
+
+	size_t memoryUsedBytes = 0;
 	size_t peakMemoryBytes = 0;
-	int64_t matrixSize = 0;
-	int64_t nonZeros = 0;
+
+	size_t matrixSize = 0;
+	size_t matrixNonZeros = 0;
 };
 
 inline auto Now()
