@@ -33,10 +33,10 @@ namespace fem::solver::standalone
 	static void ConfigurePardiso(Solver& solver)
 	{
 		solver.pardisoParameterArray()[0] = 1;
-		solver.pardisoParameterArray()[1] = 3;
-		solver.pardisoParameterArray()[7] = 2;
-		solver.pardisoParameterArray()[10] = 1;
-		solver.pardisoParameterArray()[12] = 1;
+		solver.pardisoParameterArray()[1] = 3;   // Parallel nested dissection reordering
+		solver.pardisoParameterArray()[7] = 2;   // Maksymalnie 2 kroki iterative refinement
+		solver.pardisoParameterArray()[10] = 1;  // Skalowanie macierzy
+		solver.pardisoParameterArray()[12] = 1;  // Matching (lepszy pivoting)
 	}
 
 	bool SolvePARDISO_LDLT(const SpMat& K, const Vec& b, Vec& x, SolverStats& stats)
