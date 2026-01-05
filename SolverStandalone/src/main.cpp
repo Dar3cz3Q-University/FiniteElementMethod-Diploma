@@ -103,7 +103,7 @@ void SaveMetrics(const fs::path& filename, const SolverStats& stats, const Optio
 	file << "Solver: " << (opts.useLU ? "PardisoLU" : "PardisoLDLT") << "\n"
 		<< "Threads: " << mkl_get_max_threads() << "\n"
 		<< "Matrix size: " << stats.matrixSize << "\n"
-		<< "Non-zeros: " << stats.nonZeros << "\n"
+		<< "Non-zeros: " << stats.matrixNonZeros << "\n"
 		<< "Factorization time (ms): " << stats.factorizationTimeMs << "\n"
 		<< "Solve time (ms): " << stats.solveTimeMs << "\n"
 		<< "Total time (ms): " << stats.elapsedTimeMs << "\n"
