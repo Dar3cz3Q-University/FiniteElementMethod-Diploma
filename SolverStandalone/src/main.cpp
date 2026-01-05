@@ -104,10 +104,9 @@ void SaveMetrics(const fs::path& filename, const SolverStats& stats, const Optio
 		<< "Threads: " << mkl_get_max_threads() << "\n"
 		<< "Matrix size: " << stats.matrixSize << "\n"
 		<< "Non-zeros: " << stats.nonZeros << "\n"
-		<< "Analysis time (ms): " << stats.analyzeTimeMs << "\n"
-		<< "Factorization time (ms): " << stats.factorizeTimeMs << "\n"
+		<< "Factorization time (ms): " << stats.factorizationTimeMs << "\n"
 		<< "Solve time (ms): " << stats.solveTimeMs << "\n"
-		<< "Total time (ms): " << stats.totalTimeMs << "\n"
+		<< "Total time (ms): " << stats.elapsedTimeMs << "\n"
 		<< "Peak memory (MB): " << stats.peakMemoryBytes / (1024.0 * 1024.0) << "\n"
 		<< "Residual norm: " << stats.residualNorm << "\n";
 
