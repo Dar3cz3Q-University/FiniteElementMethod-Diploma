@@ -17,7 +17,6 @@ struct SolverStats
 
 	double residualNorm = 0.0;
 
-	size_t memoryUsedBytes = 0;
 	size_t peakMemoryBytes = 0;
 
 	size_t matrixSize = 0;
