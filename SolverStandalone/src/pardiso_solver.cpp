@@ -12,6 +12,7 @@ namespace fem::solver::standalone
 
 	static size_t GetPeakMemory()
 	{
+#ifdef __linux__
 		std::ifstream status("/proc/self/status");
 		std::string line;
 		while (std::getline(status, line))
@@ -23,6 +24,8 @@ namespace fem::solver::standalone
 				return kb * 1024;
 			}
 		}
+#endif
+		return 0;
 	}
 
 	bool SolvePARDISO_LDLT(const SpMat& K, const Vec& b, Vec& x, SolverStats& stats)
