@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -std=c++23 -fopenmp -DEIGEN_USE_MKL_ALL
+CXXFLAGS := -std=c++23 -fopenmp -DEIGEN_USE_MKL_ALL -DEIGEN_USE_BLAS -DEIGEN_USE_LAPACKE
 
 MKL_ROOT ?= /opt/intel/oneapi/mkl/latest
 

@@ -6,6 +6,7 @@
 
 #include <Eigen/PardisoSupport>
 #include <mkl.h>
+#include <omp.h>
 
 namespace fem::solver::standalone
 {
@@ -28,6 +29,16 @@ namespace fem::solver::standalone
 		return 0;
 	}
 
+	template<typename Solver>
+	static void ConfigurePardiso(Solver& solver)
+	{
+		solver.pardisoParameterArray()[0] = 1;
+		solver.pardisoParameterArray()[1] = 3;
+		solver.pardisoParameterArray()[7] = 2;
+		solver.pardisoParameterArray()[10] = 1;
+		solver.pardisoParameterArray()[12] = 1;
+	}
+
 	bool SolvePARDISO_LDLT(const SpMat& K, const Vec& b, Vec& x, SolverStats& stats)
 	{
 		if (K.rows() != K.cols() || K.rows() != b.size())
@@ -39,12 +50,16 @@ namespace fem::solver::standalone
 		stats.matrixSize = K.rows();
 		stats.matrixNonZeros = K.nonZeros();
 
+		SpMat A = K;
+		A.makeCompressed();
+
 		Eigen::PardisoLDLT<SpMat> solver;
+		ConfigurePardiso(solver);
 
 		auto totalStart = Now();
 
 		auto t1 = Now();
-		solver.compute(K);
+		solver.compute(A);
 		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
 		if (solver.info() != Eigen::Success)
@@ -64,7 +79,7 @@ namespace fem::solver::standalone
 		}
 
 		stats.elapsedTimeMs = ElapsedMs(totalStart, Now());
-		stats.residualNorm = (K * x - b).norm();
+		stats.residualNorm = (A * x - b).norm();
 		stats.peakMemoryBytes = GetPeakMemory();
 
 		return true;
@@ -81,12 +96,16 @@ namespace fem::solver::standalone
 		stats.matrixSize = K.rows();
 		stats.matrixNonZeros = K.nonZeros();
 
+		SpMat A = K;
+		A.makeCompressed();
+
 		Eigen::PardisoLU<SpMat> solver;
+		ConfigurePardiso(solver);
 
 		auto totalStart = Now();
 
 		auto t1 = Now();
-		solver.compute(K);
+		solver.compute(A);
 		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
 		if (solver.info() != Eigen::Success)
@@ -106,7 +125,7 @@ namespace fem::solver::standalone
 		}
 
 		stats.elapsedTimeMs = ElapsedMs(totalStart, Now());
-		stats.residualNorm = (K * x - b).norm();
+		stats.residualNorm = (A * x - b).norm();
 		stats.peakMemoryBytes = GetPeakMemory();
 
 		return true;
@@ -132,7 +151,8 @@ namespace fem::solver::standalone
 		MKLVersion ver;
 		mkl_get_version(&ver);
 		std::cout << "MKL " << ver.MajorVersion << "." << ver.MinorVersion
-			<< ", threads: " << mkl_get_max_threads() << std::endl;
+			<< ", threads: " << mkl_get_max_threads()
+			<< ", OMP threads: " << omp_get_max_threads() << std::endl;
 	}
 
 } // namespace fem::solver::standalone

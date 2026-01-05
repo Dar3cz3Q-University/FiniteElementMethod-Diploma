@@ -1,5 +1,9 @@
 #pragma once
 
+#define EIGEN_USE_MKL_ALL
+#define EIGEN_USE_BLAS
+#define EIGEN_USE_LAPACKE
+
 #include <Eigen/Sparse>
 #include <chrono>
 

@@ -9,6 +9,7 @@
 #include <filesystem>
 
 #include <mkl.h>
+#include <omp.h>
 
 using namespace fem::solver::standalone;
 namespace fs = std::filesystem;
@@ -124,8 +125,12 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 
+	mkl_set_dynamic(0);
 	if (opts.threads > 0)
+	{
 		mkl_set_num_threads(opts.threads);
+		omp_set_num_threads(opts.threads);
+	}
 
 	PrintMKLInfo();
 
