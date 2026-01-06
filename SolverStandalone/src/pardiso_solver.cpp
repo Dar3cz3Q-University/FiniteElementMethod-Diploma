@@ -3,8 +3,11 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <vector>
+#include <cstring>
 
-#include <Eigen/PardisoSupport>
+#include <mkl_pardiso.h>
+#include <mkl_types.h>
 #include <mkl.h>
 #include <omp.h>
 
@@ -29,17 +32,35 @@ namespace fem::solver::standalone
 		return 0;
 	}
 
-	template<typename Solver>
-	static void ConfigurePardiso(Solver& solver)
+	// Helper: extract upper triangle from symmetric matrix in CSR format
+	static void ExtractUpperTriangle(const SpMat& A,
+		std::vector<MKL_INT>& ia,
+		std::vector<MKL_INT>& ja,
+		std::vector<double>& values)
 	{
-		solver.pardisoParameterArray()[0] = 1;
-		solver.pardisoParameterArray()[1] = 3;   // Parallel nested dissection reordering
-		solver.pardisoParameterArray()[7] = 2;   // Maksymalnie 2 kroki iterative refinement
-		solver.pardisoParameterArray()[10] = 1;  // Skalowanie macierzy
-		solver.pardisoParameterArray()[12] = 1;  // Matching (lepszy pivoting)
-		solver.pardisoParameterArray()[27] = 1;  // Verbose output
+		const MKL_INT n = static_cast<MKL_INT>(A.rows());
+		ia.reserve(n + 1);
+		ja.reserve(A.nonZeros() / 2 + n);
+		values.reserve(A.nonZeros() / 2 + n);
+
+		ia.push_back(1); // 1-based indexing
+
+		for (MKL_INT row = 0; row < n; ++row)
+		{
+			for (SpMat::InnerIterator it(A, row); it; ++it)
+			{
+				MKL_INT col = static_cast<MKL_INT>(it.col());
+				if (col >= row) // upper triangle (including diagonal)
+				{
+					ja.push_back(col + 1); // 1-based
+					values.push_back(it.value());
+				}
+			}
+			ia.push_back(static_cast<MKL_INT>(ja.size() + 1));
+		}
 	}
 
+	// Direct MKL PARDISO call for symmetric matrices (LDLT)
 	bool SolvePARDISO_LDLT(const SpMat& K, const Vec& b, Vec& x, SolverStats& stats)
 	{
 		if (K.rows() != K.cols() || K.rows() != b.size())
@@ -48,44 +69,98 @@ namespace fem::solver::standalone
 			return false;
 		}
 
-		stats.matrixSize = K.rows();
+		const MKL_INT n = static_cast<MKL_INT>(K.rows());
+		const MKL_INT nrhs = 1;
+		const MKL_INT mtype = -2; // Real symmetric indefinite
+
+		stats.matrixSize = n;
 		stats.matrixNonZeros = K.nonZeros();
 
-		SpMat A = K;
-		A.makeCompressed();
+		// Extract upper triangle for PARDISO
+		std::vector<MKL_INT> ia, ja;
+		std::vector<double> a;
+		ExtractUpperTriangle(K, ia, ja, a);
 
-		Eigen::PardisoLDLT<SpMat> solver;
-		ConfigurePardiso(solver);
+		// PARDISO control parameters
+		void* pt[64];
+		MKL_INT iparm[64];
+		MKL_INT maxfct = 1;
+		MKL_INT mnum = 1;
+		MKL_INT msglvl = 1; // Verbose output - PARDISO prints statistics
+		MKL_INT error = 0;
+
+		// Initialize pt and iparm
+		std::memset(pt, 0, sizeof(pt));
+		std::memset(iparm, 0, sizeof(iparm));
+
+		// Setup iparm
+		iparm[0] = 1;   // Use non-default values
+		iparm[1] = 3;   // Parallel nested dissection (METIS)
+		iparm[3] = 0;   // No iterative-direct algorithm
+		iparm[4] = 0;   // No user fill-in reducing permutation
+		iparm[5] = 0;   // Write solution into x
+		iparm[7] = 2;   // Max numbers of iterative refinement steps
+		iparm[9] = 13;  // Perturb pivot elements (1E-13)
+		iparm[10] = 1;  // Scaling (for symmetric indefinite)
+		iparm[12] = 1;  // Improved accuracy with matching
+		iparm[17] = -1; // Report number of non-zeros in factors
+		iparm[18] = -1; // Report GFLOPS
+		iparm[23] = 1;  // Two-level factorization (parallel)
+		iparm[24] = 1;  // Parallel forward/backward solve
+		iparm[26] = 1;  // Matrix checker
+		iparm[34] = 0;  // 1-based indexing (Fortran style)
+		iparm[35] = 0;  // CSR format
+
+		// Prepare vectors
+		x.resize(n);
+		std::vector<double> b_copy(b.data(), b.data() + n);
 
 		auto totalStart = Now();
 
+		// Phase 13: Analysis + Numerical Factorization + Solve
+		MKL_INT phase = 13;
 		auto t1 = Now();
-		solver.compute(A);
+
+		pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+			&n, a.data(), ia.data(), ja.data(),
+			nullptr, &nrhs, iparm, &msglvl,
+			b_copy.data(), x.data(), &error);
+
 		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
-		if (solver.info() != Eigen::Success)
+		if (error != 0)
 		{
-			std::cerr << "Compute failed" << std::endl;
-			return false;
-		}
+			std::cerr << "PARDISO error (phase 13): " << error << std::endl;
 
-		t1 = Now();
-		x = solver.solve(b);
-		stats.solveTimeMs = ElapsedMs(t1, Now());
+			// Cleanup before returning
+			phase = -1;
+			pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+				&n, nullptr, ia.data(), ja.data(),
+				nullptr, &nrhs, iparm, &msglvl,
+				nullptr, nullptr, &error);
 
-		if (solver.info() != Eigen::Success)
-		{
-			std::cerr << "Solve failed" << std::endl;
 			return false;
 		}
 
 		stats.elapsedTimeMs = ElapsedMs(totalStart, Now());
-		stats.residualNorm = (A * x - b).norm();
+		stats.solveTimeMs = 0; // Combined with factorization in phase 13
+
+		// Cleanup: Phase -1
+		phase = -1;
+		pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+			&n, nullptr, ia.data(), ja.data(),
+			nullptr, &nrhs, iparm, &msglvl,
+			nullptr, nullptr, &error);
+
+		// Compute residual
+		Vec Ax = K * x;
+		stats.residualNorm = (Ax - b).norm();
 		stats.peakMemoryBytes = GetPeakMemory();
 
 		return true;
 	}
 
+	// Direct MKL PARDISO call for unsymmetric matrices (LU)
 	bool SolvePARDISO_LU(const SpMat& K, const Vec& b, Vec& x, SolverStats& stats)
 	{
 		if (K.rows() != K.cols() || K.rows() != b.size())
@@ -94,39 +169,97 @@ namespace fem::solver::standalone
 			return false;
 		}
 
-		stats.matrixSize = K.rows();
+		const MKL_INT n = static_cast<MKL_INT>(K.rows());
+		const MKL_INT nrhs = 1;
+		const MKL_INT mtype = 11; // Real unsymmetric
+
+		stats.matrixSize = n;
 		stats.matrixNonZeros = K.nonZeros();
 
-		SpMat A = K;
-		A.makeCompressed();
+		// Convert to 1-based indexing for PARDISO
+		std::vector<MKL_INT> ia(n + 1);
+		std::vector<MKL_INT> ja(K.nonZeros());
+		std::vector<double> a(K.valuePtr(), K.valuePtr() + K.nonZeros());
 
-		Eigen::PardisoLU<SpMat> solver;
-		ConfigurePardiso(solver);
+		const auto* outerPtr = K.outerIndexPtr();
+		const auto* innerPtr = K.innerIndexPtr();
+
+		for (MKL_INT i = 0; i <= n; ++i)
+			ia[i] = static_cast<MKL_INT>(outerPtr[i]) + 1;
+
+		for (MKL_INT i = 0; i < static_cast<MKL_INT>(K.nonZeros()); ++i)
+			ja[i] = static_cast<MKL_INT>(innerPtr[i]) + 1;
+
+		// PARDISO control parameters
+		void* pt[64];
+		MKL_INT iparm[64];
+		MKL_INT maxfct = 1;
+		MKL_INT mnum = 1;
+		MKL_INT msglvl = 1; // Verbose output - PARDISO prints statistics
+		MKL_INT error = 0;
+
+		std::memset(pt, 0, sizeof(pt));
+		std::memset(iparm, 0, sizeof(iparm));
+
+		// Setup iparm for unsymmetric
+		iparm[0] = 1;   // Use non-default values
+		iparm[1] = 3;   // Parallel nested dissection (METIS)
+		iparm[3] = 0;   // No iterative-direct algorithm
+		iparm[4] = 0;   // No user fill-in reducing permutation
+		iparm[5] = 0;   // Write solution into x
+		iparm[7] = 2;   // Max numbers of iterative refinement steps
+		iparm[9] = 13;  // Perturb pivot elements (1E-13)
+		iparm[10] = 1;  // Scaling for unsymmetric
+		iparm[12] = 1;  // Weighted matching for unsymmetric
+		iparm[17] = -1; // Report number of non-zeros
+		iparm[18] = -1; // Report GFLOPS
+		iparm[23] = 1;  // Two-level factorization
+		iparm[24] = 1;  // Parallel forward/backward solve
+		iparm[26] = 1;  // Matrix checker
+		iparm[34] = 0;  // 1-based indexing
+		iparm[35] = 0;  // CSR format
+
+		x.resize(n);
+		std::vector<double> b_copy(b.data(), b.data() + n);
 
 		auto totalStart = Now();
 
+		// Phase 13: Analysis + Factorization + Solve
+		MKL_INT phase = 13;
 		auto t1 = Now();
-		solver.compute(A);
+
+		pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+			&n, a.data(), ia.data(), ja.data(),
+			nullptr, &nrhs, iparm, &msglvl,
+			b_copy.data(), x.data(), &error);
+
 		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
-		if (solver.info() != Eigen::Success)
+		if (error != 0)
 		{
-			std::cerr << "Compute failed" << std::endl;
-			return false;
-		}
+			std::cerr << "PARDISO error (phase 13): " << error << std::endl;
 
-		t1 = Now();
-		x = solver.solve(b);
-		stats.solveTimeMs = ElapsedMs(t1, Now());
+			phase = -1;
+			pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+				&n, nullptr, ia.data(), ja.data(),
+				nullptr, &nrhs, iparm, &msglvl,
+				nullptr, nullptr, &error);
 
-		if (solver.info() != Eigen::Success)
-		{
-			std::cerr << "Solve failed" << std::endl;
 			return false;
 		}
 
 		stats.elapsedTimeMs = ElapsedMs(totalStart, Now());
-		stats.residualNorm = (A * x - b).norm();
+		stats.solveTimeMs = 0;
+
+		// Cleanup
+		phase = -1;
+		pardiso(pt, &maxfct, &mnum, &mtype, &phase,
+			&n, nullptr, ia.data(), ja.data(),
+			nullptr, &nrhs, iparm, &msglvl,
+			nullptr, nullptr, &error);
+
+		Vec Ax = K * x;
+		stats.residualNorm = (Ax - b).norm();
 		stats.peakMemoryBytes = GetPeakMemory();
 
 		return true;
