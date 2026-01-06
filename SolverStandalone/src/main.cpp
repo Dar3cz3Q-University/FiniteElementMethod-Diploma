@@ -23,6 +23,7 @@ struct Options
 	fs::path metricsFile;
 	bool useLU = false;
 	int threads = 0;
+	bool quiet = false;
 };
 
 void PrintUsage(const char* name)
@@ -39,7 +40,8 @@ void PrintUsage(const char* name)
 		<< "Options:\n"
 		<< "  -s, --solver <ldlt|lu>   Solver type (default: ldlt)\n"
 		<< "  -t, --threads <n>        Number of MKL threads (default: auto)\n"
-		<< "  -m, --metrics <file>     Output metrics to file\n";
+		<< "  -m, --metrics <file>     Output metrics to file\n"
+		<< "  -q, --quiet              Suppress solver stats (only PARDISO output)\n";
 }
 
 bool ParseArgs(int argc, char* argv[], Options& opts)
@@ -85,6 +87,10 @@ bool ParseArgs(int argc, char* argv[], Options& opts)
 		{
 			opts.metricsFile = argv[++i];
 		}
+		else if (std::strcmp(argv[i], "-q") == 0 || std::strcmp(argv[i], "--quiet") == 0)
+		{
+			opts.quiet = true;
+		}
 	}
 	return true;
 }
@@ -116,8 +122,6 @@ void SaveMetrics(const fs::path& filename, const SolverStats& stats, const Optio
 
 int main(int argc, char* argv[])
 {
-	std::cout << "Standalone Solver\n" << std::endl;
-
 	Options opts;
 	if (!ParseArgs(argc, argv, opts))
 	{
@@ -132,10 +136,13 @@ int main(int argc, char* argv[])
 		omp_set_num_threads(opts.threads);
 	}
 
-	PrintMKLInfo();
-
-	std::cout << "Directory: " << opts.directory.string() << std::endl;
-	std::cout << "Solver: " << (opts.useLU ? "PardisoLU" : "PardisoLDLT") << std::endl;
+	if (!opts.quiet)
+	{
+		std::cout << "Standalone Solver\n" << std::endl;
+		PrintMKLInfo();
+		std::cout << "Directory: " << opts.directory.string() << std::endl;
+		std::cout << "Solver: " << (opts.useLU ? "PardisoLU" : "PardisoLDLT") << std::endl;
+	}
 
 	SpMat H;
 	Vec P, T;
@@ -153,7 +160,8 @@ int main(int argc, char* argv[])
 	if (!SaveVector(opts.solutionFile.string(), T))
 		return 1;
 
-	PrintBenchmark(stats);
+	if (!opts.quiet)
+		PrintBenchmark(stats);
 
 	if (!opts.metricsFile.empty())
 		SaveMetrics(opts.metricsFile, stats, opts);
