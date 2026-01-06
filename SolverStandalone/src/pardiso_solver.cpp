@@ -55,16 +55,29 @@ namespace fem::solver::standalone
 
 		auto totalStart = Now();
 
+		// Phase 11: Analysis (reordering, symbolic factorization)
 		auto t1 = Now();
-		solver.compute(A);
+		solver.analyzePattern(A);
+		stats.analysisTimeMs = ElapsedMs(t1, Now());
+
+		if (solver.info() != Eigen::Success)
+		{
+			std::cerr << "Analysis failed" << std::endl;
+			return false;
+		}
+
+		// Phase 22: Numerical factorization
+		t1 = Now();
+		solver.factorize(A);
 		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
 		if (solver.info() != Eigen::Success)
 		{
-			std::cerr << "Compute failed" << std::endl;
+			std::cerr << "Factorization failed" << std::endl;
 			return false;
 		}
 
+		// Phase 33: Solve
 		t1 = Now();
 		x = solver.solve(b);
 		stats.solveTimeMs = ElapsedMs(t1, Now());
@@ -101,16 +114,29 @@ namespace fem::solver::standalone
 
 		auto totalStart = Now();
 
+		// Phase 11: Analysis (reordering, symbolic factorization)
 		auto t1 = Now();
-		solver.compute(A);
+		solver.analyzePattern(A);
+		stats.analysisTimeMs = ElapsedMs(t1, Now());
+
+		if (solver.info() != Eigen::Success)
+		{
+			std::cerr << "Analysis failed" << std::endl;
+			return false;
+		}
+
+		// Phase 22: Numerical factorization
+		t1 = Now();
+		solver.factorize(A);
 		stats.factorizationTimeMs = ElapsedMs(t1, Now());
 
 		if (solver.info() != Eigen::Success)
 		{
-			std::cerr << "Compute failed" << std::endl;
+			std::cerr << "Factorization failed" << std::endl;
 			return false;
 		}
 
+		// Phase 33: Solve
 		t1 = Now();
 		x = solver.solve(b);
 		stats.solveTimeMs = ElapsedMs(t1, Now());
@@ -134,6 +160,7 @@ namespace fem::solver::standalone
 		std::cout << std::fixed << std::setprecision(2);
 		std::cout << "Size:          " << stats.matrixSize << "x" << stats.matrixSize << std::endl;
 		std::cout << "Non-zeros:     " << stats.matrixNonZeros << std::endl;
+		std::cout << "Analysis:      " << stats.analysisTimeMs << " ms" << std::endl;
 		std::cout << "Factorization: " << stats.factorizationTimeMs << " ms" << std::endl;
 		std::cout << "Solve:         " << stats.solveTimeMs << " ms" << std::endl;
 		std::cout << "Total:         " << stats.elapsedTimeMs << " ms" << std::endl;

@@ -111,6 +111,7 @@ void SaveMetrics(const fs::path& filename, const SolverStats& stats, const Optio
 		<< "Threads: " << mkl_get_max_threads() << "\n"
 		<< "Matrix size: " << stats.matrixSize << "\n"
 		<< "Non-zeros: " << stats.matrixNonZeros << "\n"
+		<< "Analysis time (ms): " << stats.analysisTimeMs << "\n"
 		<< "Factorization time (ms): " << stats.factorizationTimeMs << "\n"
 		<< "Solve time (ms): " << stats.solveTimeMs << "\n"
 		<< "Total time (ms): " << stats.elapsedTimeMs << "\n"
