@@ -37,6 +37,7 @@ namespace fem::solver::standalone
 		solver.pardisoParameterArray()[7] = 2;   // Maksymalnie 2 kroki iterative refinement
 		solver.pardisoParameterArray()[10] = 1;  // Skalowanie macierzy
 		solver.pardisoParameterArray()[12] = 1;  // Matching (lepszy pivoting)
+		solver.pardisoParameterArray()[27] = 1;  // Verbose output
 	}
 
 	bool SolvePARDISO_LDLT(const SpMat& K, const Vec& b, Vec& x, SolverStats& stats)
