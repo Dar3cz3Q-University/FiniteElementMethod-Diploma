@@ -3,6 +3,7 @@
 #include "pardiso_solver.h"
 
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <cstring>
 #include <cstdlib>
@@ -158,6 +159,10 @@ int main(int argc, char* argv[])
 
 	if (!success)
 		return 1;
+
+	std::cout << "\nTime total: " << std::fixed << std::setprecision(6)
+		<< stats.elapsedTimeMs / 1000.0 << std::endl;
+
 	if (!SaveVector(opts.solutionFile.string(), T))
 		return 1;
 
