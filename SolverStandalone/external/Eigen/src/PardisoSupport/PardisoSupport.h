@@ -127,7 +127,7 @@ class PardisoImpl : public SparseSolverBase<Derived>
     {
       eigen_assert((sizeof(StorageIndex) >= sizeof(_INTEGER_t) && sizeof(StorageIndex) <= 8) && "Non-supported index type");
       m_iparm.setZero();
-      m_msglvl = 0; // No output
+      m_msglvl = 1; // No output
       m_isInitialized = false;
     }
 
