@@ -36,7 +36,7 @@ std::expected<void, std::string> StatsExporter::ExportCSV(const fs::path& path, 
 	out += exportHeader;
 
 	out += std::format(
-		"{},{},{},{},{},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.2e}\n",
+		"{},{},{},{},{},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.3f},{:.2e}\n",
 		metrics.solverName,
 		fem::config::StorageOrderName,
 		fem::config::ReorderingName,
@@ -47,7 +47,6 @@ std::expected<void, std::string> StatsExporter::ExportCSV(const fs::path& path, 
 		stats.getAvgPerStepMs(),
 		stats.totalTimeMs,
 		stats.overheadMs,
-		stats.getMemoryUsedMB(),
 		stats.getPeakMemoryMB(),
 		stats.residualNorm
 	);

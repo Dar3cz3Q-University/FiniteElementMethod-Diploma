@@ -39,10 +39,18 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 	std::atomic<bool> hasError{ false };
 	const int totalElements = static_cast<int>(numberOfElements);
 
+	// Per-thread triplet statistics
+	int maxThreads = omp_get_max_threads();
+	std::vector<size_t> perThreadTripletsH(maxThreads, 0);
+	std::vector<size_t> perThreadTripletsC(maxThreads, 0);
+	std::vector<size_t> perThreadCapacityH(maxThreads, 0);
+	std::vector<size_t> perThreadCapacityC(maxThreads, 0);
+
 	auto elementStart = Now();
 
 #pragma omp parallel
 	{
+		const int threadId = omp_get_thread_num();
 		const int numThreads = omp_get_num_threads();
 		const size_t estimatedPerThread = (numberOfElements / numThreads + 1) * 16;
 
@@ -53,7 +61,7 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 
 		Vec localP = Vec::Zero(numberOfNodes);
 
-#pragma omp for schedule(dynamic, 64)
+#pragma omp for schedule(dynamic, 128)
 		for (int i = 0; i < totalElements; i++)
 		{
 			if (hasError.load(std::memory_order_relaxed)) continue;
@@ -83,6 +91,12 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 				}
 			}
 		}
+
+		// Store per-thread statistics before merge
+		perThreadTripletsH[threadId] = localTripletsH.size();
+		perThreadTripletsC[threadId] = localTripletsC.size();
+		perThreadCapacityH[threadId] = localTripletsH.capacity();
+		perThreadCapacityC[threadId] = localTripletsC.capacity();
 
 		auto mergeStart = Now();
 
@@ -185,6 +199,42 @@ std::expected<GlobalMatrixBuildResult, int> fem::domain::GlobalMatrixBuilder::Bu
 
 	auto totalEnd = Now();
 	stats.totalAssemblyTimeMs = ElapsedMs(totalStart, totalEnd);
+
+	// Memory statistics before factorization
+	LOG_INFO("=== Memory usage before factorization ===");
+	LOG_INFO("Triplet size: sizeof(Triplet) = {} bytes", sizeof(Triplet));
+
+	LOG_INFO("Per-thread triplet counts:");
+	size_t totalThreadLocalTripletsH = 0;
+	size_t totalThreadLocalTripletsC = 0;
+	size_t totalThreadLocalCapacityH = 0;
+	size_t totalThreadLocalCapacityC = 0;
+	for (int t = 0; t < maxThreads; ++t)
+	{
+		if (perThreadTripletsH[t] > 0 || perThreadTripletsC[t] > 0)
+		{
+			LOG_INFO("  Thread {}: H = {} triplets (capacity: {}), C = {} triplets (capacity: {})",
+				t, perThreadTripletsH[t], perThreadCapacityH[t], perThreadTripletsC[t], perThreadCapacityC[t]);
+			totalThreadLocalTripletsH += perThreadTripletsH[t];
+			totalThreadLocalTripletsC += perThreadTripletsC[t];
+			totalThreadLocalCapacityH += perThreadCapacityH[t];
+			totalThreadLocalCapacityC += perThreadCapacityC[t];
+		}
+	}
+
+	size_t totalThreadLocalBytes = (totalThreadLocalCapacityH + totalThreadLocalCapacityC) * sizeof(Triplet);
+	double totalThreadLocalMB = static_cast<double>(totalThreadLocalBytes) / (1024.0 * 1024.0);
+	LOG_INFO("Total thread-local triplets: H = {}, C = {}", totalThreadLocalTripletsH, totalThreadLocalTripletsC);
+	LOG_INFO("Total thread-local lists size: {:.2f} MB (capacity: {} H + {} C triplets)",
+		totalThreadLocalMB, totalThreadLocalCapacityH, totalThreadLocalCapacityC);
+
+	LOG_INFO("Global matrix after aggregation:");
+	LOG_INFO("  Matrix H: nnz = {}, size = {:.2f} MB",
+		nnzH, static_cast<double>(nnzH * (sizeof(double) + sizeof(int)) + (numberOfNodes + 1) * sizeof(int)) / (1024.0 * 1024.0));
+	LOG_INFO("  Matrix C: nnz = {}, size = {:.2f} MB",
+		nnzC, static_cast<double>(nnzC * (sizeof(double) + sizeof(int)) + (numberOfNodes + 1) * sizeof(int)) / (1024.0 * 1024.0));
+	LOG_INFO("  Vector P: size = {:.2f} MB", static_cast<double>(numberOfNodes * sizeof(double)) / (1024.0 * 1024.0));
+	LOG_INFO("==========================================");
 
 	LOG_INFO("Matrix H statistics:");
 	LOG_INFO("  Size: {} x {}", out.H.rows(), out.H.cols());

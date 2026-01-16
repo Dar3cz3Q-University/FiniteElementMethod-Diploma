@@ -75,7 +75,6 @@ std::expected<FEMSolverResult, SolverError> fem::solver::FEMSolver::SolveSteady(
 	LOG_INFO("  Factorization time: {:.2f} ms", stats.factorizationTimeMs);
 	LOG_INFO("  Solve time:         {:.2f} ms", stats.solveTimeMs);
 	LOG_INFO("  Overhead:           {:.2f} ms", totalTime - stats.elapsedTimeMs);
-	LOG_INFO("  Memory used:        {:.2f} MB", stats.getMemoryUsedMB());
 	LOG_INFO("  Peak memory:        {:.2f} MB", stats.getPeakMemoryMB());
 	LOG_INFO("  Residual norm:      {:.2e}", stats.residualNorm);
 	LOG_INFO("  Solution range:     T_min = {:.2f} K, T_max = {:.2f} K", solution.minCoeff(), solution.maxCoeff());  // TODO: Kelvin or else?
@@ -254,7 +253,6 @@ std::expected<FEMSolverResult, SolverError> FEMSolver::SolveTransient(const SpMa
 	LOG_INFO("  Avg factorization:  {:.2f} ms/step", stats.getAvgFactorizationMs());
 	LOG_INFO("  Avg solve:          {:.2f} ms/step", stats.getAvgSolveMs());
 	LOG_INFO("  Avg per step:       {:.2f} ms", stats.getAvgPerStepMs());
-	LOG_INFO("  Memory used:        {:.2f} MB", stats.getMemoryUsedMB());
 	LOG_INFO("  Peak memory:        {:.2f} MB", stats.getPeakMemoryMB());
 	LOG_INFO("  Residual range:     [{:.2e}, {:.2e}]", stats.minResidual, stats.maxResidual);
 	LOG_INFO("  Final temperature:  T_min = {:.2f} K, T_max = {:.2f} K", T_current.minCoeff(), T_current.maxCoeff());  // TODO: Kelvin or else?
