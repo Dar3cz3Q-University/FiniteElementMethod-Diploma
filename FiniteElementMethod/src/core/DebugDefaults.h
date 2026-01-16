@@ -23,6 +23,7 @@ inline ApplicationOptions GetTransientTest()
 	opts.configFilePath = "..\\assets\\config\\transient.json";
 	opts.metricsFilePath = "metrics.json";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
+	opts.useCache = false;
 	return opts;
 }
 
@@ -32,6 +33,16 @@ inline ApplicationOptions GetLargeTest()
 	opts.configFilePath = "..\\assets\\config\\large.json";
 	opts.metricsFilePath = "metrics.json";
 	opts.LinearSolverType = solver::linear::LinearSolverType::SimplicialLDLT;
+	opts.numberOfThreads = 16;
+	return opts;
+}
+
+inline ApplicationOptions GetBuildMatrixOnlyTest()
+{
+	ApplicationOptions opts;
+	opts.configFilePath = "..\\assets\\config\\steady.json";
+	opts.exportMtxPath = "output\\matrices";
+	opts.buildMatrixOnly = true;
 	opts.numberOfThreads = 16;
 	return opts;
 }

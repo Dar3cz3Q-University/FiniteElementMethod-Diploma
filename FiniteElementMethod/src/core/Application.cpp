@@ -195,6 +195,12 @@ ExitCode Application::Execute()
 		}
 	}
 
+	if (m_Options.buildMatrixOnly)
+	{
+		LOG_INFO("Build matrix only mode - skipping solver");
+		return Success;
+	}
+
 	auto solverConfig = solver::FEMSolverConfig{
 		.problemType = config.problemType,
 		.linearSolver = m_Options.LinearSolverType,

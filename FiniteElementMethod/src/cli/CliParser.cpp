@@ -29,7 +29,8 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 			cxxopts::value<std::size_t>())
 		("s,solver", GenerateSolverHelpText(),
 			cxxopts::value<std::string>()->default_value("cholesky"))
-		("no-cache", "Disable matrix caching");
+		("no-cache", "Disable matrix caching")
+		("build-matrix-only", "Build stiffness matrix and exit without solving");
 
 	cxxopts::ParseResult result;
 	try
@@ -70,6 +71,9 @@ std::expected<core::ApplicationOptions, CliError> CliParser::Parse(int argc, con
 		return std::unexpected(res.error());
 
 	if (auto res = ExtractCacheEnabled(result, &config); !res)
+		return std::unexpected(res.error());
+
+	if (auto res = ExtractBuildMatrixOnly(result, &config); !res)
 		return std::unexpected(res.error());
 
 	return config;
@@ -157,6 +161,14 @@ std::expected<void, CliError> CliParser::ExtractCacheEnabled(const cxxopts::Pars
 {
 	if (result.count("no-cache"))
 		config->useCache = false;
+
+	return {};
+}
+
+std::expected<void, CliError> CliParser::ExtractBuildMatrixOnly(const cxxopts::ParseResult& result, core::ApplicationOptions* config)
+{
+	if (result.count("build-matrix-only"))
+		config->buildMatrixOnly = true;
 
 	return {};
 }
